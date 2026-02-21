@@ -39,12 +39,12 @@ tms.lin4 <- tms.lin4/365
 # what is the total population size?
 Npop <- 2.0 * 10^5
 
-gettheta <- function(x){
+gettheta <- function(x,fractrans){
 	#of those with active TB, what fraction are superspreaders?
 	pH <- 0.1
 
 	# infectiousness multipliers
-	f <- .9 # fraction of transmission from superspreaders
+	f <- fractrans # fraction of transmission from superspreaders
 
 	# parameterize in terms of equilibrium values of S, L, I
 	Seq <- 2/3 * Npop
@@ -102,8 +102,12 @@ gettheta <- function(x){
 }
 
 # 2 parametrizations: low and high prevalence:
-theta1 <- gettheta(0.001) # low prevalence
-theta2 <- gettheta(0.01)  # high prevalence
+#theta1 <- gettheta(0.001) # low prevalence
+#theta2 <- gettheta(0.01)  # high prevalence
+
+theta1 <- gettheta(0.01,0.1)
+theta2 <- gettheta(0.01,0.9)
+
 
 # set the timestep size:
 dT <- 1
@@ -154,7 +158,7 @@ pdf(file='figures/nullmodelfigs/nullmodeltrajs.pdf',height=5,width=9)
 par(mfrow=c(1,2))
 
 # low prevalence:
-plot(log10(L)~date,plottraj1,type='l',col='#005AB5',main='Low prevalence',lwd=2.5,
+plot(log10(L)~date,plottraj1,type='l',col='#005AB5',main='Homogeneous infectiousness',lwd=2.5,
 	ylab=bquote(Log[10](.('No. of infections'))),xlab='Date',lty='dotted', ylim=c(0,6))
 
 lines(log10(IL)~date,plottraj1,type='l',col='#005AB5',main='Active TB',lwd=2.5,
@@ -165,7 +169,7 @@ legend('top',col=c('#005AB5','#005AA0'),
 	cex=1.3)
 
 # high prevalence:
-plot(log10(L)~date,plottraj2,type='l',col='#005AB5',main='High prevalence',lwd=2.5,
+plot(log10(L)~date,plottraj2,type='l',col='#005AB5',main='Superspreading',lwd=2.5,
 	ylab=bquote(Log[10](.('No. of infections'))),xlab='Date',lty='dotted', ylim=c(0,6))
 
 lines(log10(IL)~date,plottraj2,type='l',col='#005AB5',main='Active TB',lwd=2.5,
@@ -200,8 +204,30 @@ getsimtree <- function(tms,output){
 
 }
 
+#fulltree <- simulate_tree(
+#	simuResults=out1,
+#	deme=c('IH','IL','L','JH','JL','M'),
+#	sampled=c(
+#		IH=pH,
+#		IL=(1-pH),
+#		JH=0,
+#		JL=0),
+#	root = 'IH',
+#	nTrials=50,
+#	resampling=FALSE,
+#	addInfos = TRUE,
+#	isFullTrajectory=TRUE)
+#
+
+
 tree1 <- getsimtree(tms.lin4,out1)
-tree2 <- getsimtree(tms.lin4,out2)
+#tree2 <- getsimtree(tms.lin4,out2)
+
+tms2.lin4 = runif(-100,max(tms.lin4),n=513)
+tree2 <- getsimtree(tms2.lin4,out1)
+
+tree3 <- getsimtree(tms.lin4,out2)
+tree4 <- getsimtree(tms2.lin4,out2)
 
 #par(mfrow=c(1,3))
 
@@ -274,8 +300,8 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
         # calculate LBI directly from the tree:
         dat$LBI <- lbi(tree,tau=taulbi)[1:length(tree$tip.label)]
 
-	dat$LBI <- dat$LBI - min(dat$LBI)
-	dat$THD <- dat$THD - min(dat$THD)
+	#dat$LBI <- dat$LBI - min(dat$LBI)
+	#dat$THD <- dat$THD - min(dat$THD)
 
         #count the number of close relatives within a threshold distance:
         dat$nrelatives <- apply(x,1,function(x) sum(x <= taurels)) - 1
@@ -319,15 +345,20 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 }
 
 
-fig <- plot_grid(getmainplot(tree1,title='Low prevalence')[[1]],
-		getmainplot(tree2,title='High prevalence')[[1]],
-		nrow=1)
+fig <- plot_grid(getmainplot(tree3,title='Cross-sectional sampling,\nsuperspreading')[[1]],
+		getmainplot(tree4,title='Longitudinal sampling,\nsuperspreading')[[1]],
+		getmainplot(tree1,title='Cross-sectional sampling,\nhomogenous infectiousness')[[1]],
+		getmainplot(tree2,title='Longitudinal sampling,\nhomogeneous infectiousness')[[1]],
+		nrow=2)
 
-ggsave(fig, file='figures/nullmodelfigs/nullmodeltrees.png', dpi=600, height=8, width=12)
+ggsave(fig, file='figures/nullmodelfigs/nullmodeltrees.png', dpi=600, height=16, width=12)
 
 # Want to visualize the relationship between LBI and superspreader status
-dat1 <- getmainplot(tree1,title='Low prevalence')[[2]]
-dat2 <- getmainplot(tree2,title='High prevalence')[[2]]
+dat1 <- getmainplot(tree1,title='')[[2]]
+dat2 <- getmainplot(tree2,title='')[[2]]
+dat3 <- getmainplot(tree3,title='')[[2]]
+dat4 <- getmainplot(tree4,title='')[[2]]
+
 
 dat1$Infectiousness <- as.numeric(grepl(dat1$label, pattern='IH'))
 dat1$Infectiousness <- dat1$Infectiousness + 1
@@ -337,11 +368,39 @@ dat2$Infectiousness <- as.numeric(grepl(dat2$label, pattern='IH'))
 dat2$Infectiousness <- dat2$Infectiousness + 1
 dat2$Infectiousness <- c('Low', 'High')[dat2$Infectiousness]
 
-pdf(file='figures/nullmodelfigs/boxplots.pdf',width=8,height=6)
-par(mfrow=c(1,2))
-boxplot(LBI~Infectiousness,dat1,main='Low prevalence')
-boxplot(LBI~Infectiousness,dat2,main='High prevalence')
+dat3$Infectiousness <- as.numeric(grepl(dat3$label, pattern='IH'))
+dat3$Infectiousness <- dat3$Infectiousness + 1
+dat3$Infectiousness <- c('Low', 'High')[dat3$Infectiousness]
+
+dat4$Infectiousness <- as.numeric(grepl(dat4$label, pattern='IH'))
+dat4$Infectiousness <- dat4$Infectiousness + 1
+dat4$Infectiousness <- c('Low', 'High')[dat4$Infectiousness]
+
+dat3$Sim <- 3
+dat4$Sim <- 4
+
+boxdat <- rbind(dat3,dat4) 
+
+pdf(file='figures/nullmodelfigs/boxplots.pdf',width=8,height=8)
+par(mfrow=c(1,1))
+boxplot(LBI~Infectiousness*Sim,boxdat,col=c('blue','blue','darkblue','darkblue'),
+	xaxt='n',main='LBI ~ Infectiousness x Sampling scheme',xlab='',
+	ylab='Local Branching Index')
+axis(1, line=2,
+	at = c(1,2,3,4),
+	labels = c(
+		'High\ninfectiousness+\ncross-sectional\nsampling',
+		'Low\ninfectiousness+\ncross-sectional\nsampling',
+		'High\ninfectiousness+\nlongitudinal\nsampling',
+		'Low\ninfectiousness+\nlongitudinal\nsampling'),
+	tick=F, cex=0.3)
 dev.off()
+
+#pdf(file='figures/nullmodelfigs/boxplots.pdf',width=9,height=9)
+#par(mfrow=c(1,2))
+#boxplot(LBI~Infectiousness,dat3,main='Cross-sectional sampling,\nsuperspreading')
+#boxplot(LBI~Infectiousness,dat4,main='Longitudinal sampling,\nsuperspreading')
+#dev.off()
 
 gettbls <- function(tree){
 	tbls <-	tree$edge.length[ tree$edge[,2] <= length(tree$tip.label) ]
@@ -349,8 +408,8 @@ gettbls <- function(tree){
 }
 
 
-dat1 <- getmainplot(tree1)[[2]]
-dat2 <- getmainplot(tree2)[[2]]
+#dat1 <- getmainplot(tree1)[[2]]
+#dat2 <- getmainplot(tree2)[[2]]
 
 # calculate LTT, LBI, and TBL for the empirical tree:
 lin4phi <- read.nexus('/Users/abeams/Documents/projects/TB/lineage_4_delphy/alex/lineage4_delphy.trees')
@@ -363,47 +422,94 @@ lin4tbl <- gettbls(lin4tree)
 
 # make a panel displaying LTT, distribution of LBI, and tbl distribution:
 
-pdf(file='figures/nullmodelfigs/nullmodelstats.pdf',height=6,width=16)
+pdf(file='figures/nullmodelfigs/nullmodelstats.pdf',height=15,width=15)
 
-par(mfrow=c(1,3),mar=c(5,5,4,2))
+par(mfrow=c(2,2),mar=c(5,5,4,2))
+
 # 1. make LTT plots for the trees:
 ltt1 <- ltt.plot.coords(tree1)
 ltt2 <- ltt.plot.coords(tree2)
+ltt3 <- ltt.plot.coords(tree3)
+ltt4 <- ltt.plot.coords(tree4)
+
 
 inds = 1:dim(ltt1)[1]
 plot(ltt1[inds,'time'], ltt1[inds,'N'], type = "l",col = "blue",lwd = 1,
 	xlab = "Time",ylab = "No. of lineages",
-	main = "Lineage-through-time plot",cex.main=2,cex.axis=2,cex.lab=2,cex=2,
-	ylim=c(0,300))
-lines(ltt2[inds,'time'],ltt2[inds,'N'],lty=1,lwd=3,col='darkblue')
+	main = "Lineages through time",cex.main=2,cex.axis=2,cex.lab=2,cex=2,
+	ylim=c(0,500))
 lines(lin4ltt[,'time'],lin4ltt[,'N'],lty=1,lwd=4,col='red')
+lines(ltt2[inds,'time'],ltt2[inds,'N'],lty=1,lwd=1,col='darkblue')
+lines(ltt3[inds,'time'],ltt3[inds,'N'],lty=1,lwd=3,col='blue')
+lines(ltt4[inds,'time'],ltt4[inds,'N'],lty=1,lwd=3,col='darkblue')
 
-# 2. display LBI distributions:
+legend('topleft',legend=
+	c('Cross-sectional + homogeneous inf.',
+	'Longitudinal + homogeneous inf.',
+	'Cross-sectional + superspreading',
+	'Longitudinal + superspreading',
+	'Empirical Lineage 4 phylogeny'),
+	lty=c(1,1,1,1,1),
+	lwd=c(1,1,3,3,3),cex=2,col=c('blue','darkblue','blue','darkblue','red'),bty='n')
 
-plot(ecdf(dat2$LBI),xlab='LBI',ylab='Cumulative density',main='LBI distribution',
-	cex.main=2,cex.axis=2,cex.lab=2,cex=2,lty=2,ylim=c(0,1.0),xlim=c(0,30),
-	verticals=T, do.points=F, lwd=3, col='darkblue')
+# 2. Display tbl distributions
+
+plot(density(gettbls(tree1)),lwd=1, xlab='Terminal branch length',
+	ylab='Density',main='Terminal Branch Lengths',
+	cex.main=2,cex.axis=2,cex.lab=2,cex=2,lty=1,ylim=c(0,0.4),
+	col='blue',xlim=c(0,60))
+lines(density(gettbls(tree2)),lwd=1, xlab='LBI',ylab='Density',	
+	main='LBI distribution',lty=1,
+	col='darkblue')
+lines(density(gettbls(tree3)),lwd=3, xlab='LBI',ylab='Density',	
+	main='LBI distribution',lty=1,
+	col='blue')
+lines(density(gettbls(tree4)),lwd=3, xlab='LBI',ylab='Density',	
+	main='LBI distribution',lty=1,
+	col='darkblue')
+lines(density(gettbls(lin4tree)),lwd=3, xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
+	col='red')
+	
+# 3. display LBI distributions:
+
+plot(ecdf(dat2$LBI),xlab='LBI',ylab='Cumulative density',main='Local Branching Index',
+	cex.main=2,cex.axis=2,cex.lab=2,cex=2,lty=1,ylim=c(0,1.0),xlim=c(0,30),
+	verticals=T, do.points=F, lwd=1, col='darkblue')
 lines(ecdf(dat1$LBI), 
 	xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
 	verticals=T,do.points=F,col='blue',lwd=1)
+lines(ecdf(dat3$LBI), 
+	xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
+	verticals=T,do.points=F,col='blue',lwd=3)
+lines(ecdf(dat4$LBI), 
+	xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
+	verticals=T,do.points=F,col='darkblue',lwd=3)
 lines(ecdf(lin4lbi), 
-	xlab='LBI',ylab='Density',main='LBI distribution',lty=1,col='red',
-	verticals=T, do.points=F,lwd=4)
-legend('right',legend=c('Low prevalence','High prevalence','Empirical tree'),
-	lwd=c(1,3,5,4),lty=1,cex=2,col=c('blue','darkblue','red'),bty='n')
+	xlab='LBI',ylab='Density',main='LBI distribution',lty=3,col='red',
+	verticals=T, do.points=F,lwd=3)
 
 
-# 3. Display tbl distributions
+# 4. Display LBI ~ infectiousness for cross sect'l and long'tdl sampling:
+boxplot(LBI~Infectiousness*Sim,boxdat,col=c('blue','blue','darkblue','darkblue'),
+	xaxt='n',main='LBI ~ Infectiousness x Sampling scheme',xlab='',
+	ylab='Local Branching Index',
+	cex.main=2,cex.axis=2,cex.lab=2)
+legend('topright',col=c('blue','darkblue'),legend=c('Cross-sectional sampling','Longitudinal sampling'),
+	pch=15,cex=2,bty='n')
+axis(1, line=0.25,
+	at = c(1,2,3,4),
+	labels = c(
+		'High',
+		'Low',
+		'High',
+		'Low'),
+	tick=F, cex.axis=2)
+axis(1, line=3.00,
+	at = c(2.5),
+	labels = 'Infectiousness',
+	tick=F, cex.axis=2)
 
-plot(ecdf(gettbls(tree1)),lwd=1, xlab='Terminal branch length',
-	ylab='Cumulative density',main='Terminal Branch Length distribution',
-	cex.main=2,cex.axis=2,cex.lab=2,cex=2,lty=1,ylim=c(0,1.0),
-	verticals=T, do.points=F,col='blue')
-lines(ecdf(gettbls(tree2)),lwd=3, xlab='LBI',ylab='Density',	
-	main='LBI distribution',lty=1,
-	verticals=T, do.points=F,col='darkblue')
-lines(ecdf(gettbls(lin4tree)),lwd=4, xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
-	col='red',
-	verticals=T,do.points=F)
 
 dev.off()
+
+
