@@ -148,6 +148,8 @@ legend('right',col=c('#005AB5','#DC3220'),lty=1,lwd=2.5,legend=c('resident','var
 t.01 <- traj[max(which(traj$p <= .01)), 'Time']
 t.05 <- traj[max(which(traj$p <= .05)), 'Time']
 t.10 <- traj[max(which(traj$p <= .10)), 'Time']
+t.90 <- traj[max(which(traj$p <= .90)), 'Time']
+
 
 # let's use the same spacing of sampling events, but shift them so the
 #	first sampling event coincides with t.x
@@ -160,6 +162,9 @@ tms.05 <- tms.05 - min(tms.05) + t.05
 
 tms.10 <- tms.lin4
 tms.10 <- tms.10 - min(tms.10) + t.10
+
+tms.90 <- tms.lin4
+tms.90 <- tms.90 - min(tms.90) + t.90
 
 # set the minimum time for longitudinal sampling to commence:
 mintime <- -120
@@ -225,6 +230,22 @@ getsimtree.10 <- function(tms){
 	addInfos = TRUE)
 }
 
+getsimtree.90 <- function(tms){
+	simulate_tree(
+	simuResults=out,
+	dates=c(tms),
+	deme=c('IH','IL','L','JH','JL','M'),
+	sampled=c(
+		IH=pH*0.10,
+		IL=(1-pH)*0.10,
+		JH=pH*0.90,
+		JL=(1-pH)*0.90),
+	root = 'IH',
+	nTrials=50,
+	resampling=FALSE,
+	addInfos = TRUE)
+}
+
 getsimtree.long <- function(tms){
 	simulate_tree(
 	simuResults=out,
@@ -240,6 +261,7 @@ getsimtree.long <- function(tms){
 tree.01 <- getsimtree.01(tms.01)
 tree.05 <- getsimtree.05(tms.05)
 tree.10 <- getsimtree.10(tms.10)
+tree.90 <- getsimtree.90(tms.90)
 tree.long <- getsimtree.long(tms.long)
 
 
@@ -478,14 +500,35 @@ vrntmrca <- getMRCA(tree, vrns )
 #	geom_tippoint(aes(col=state))
 # ^this is working correctly, identifying the variant clade. 
 
-ptree <- p + aes(col=lbi20) + 
-	geom_hilight(node=vrntmrca, fill='red',alpha=0.10)
-ptree.long <- ptree
+#ptree <- p + aes(col=lbi20) + 
+#	geom_hilight(node=vrntmrca, fill='red',alpha=0.10)
+#ptree.long <- ptree
+
+ptree <- p + #aes(col=lbi10) + 
+	geom_tippoint(aes(col=lbi20)) + geom_nodepoint(aes(col=lbi20)) +
+	scale_colour_continuous(name='LBI',
+        low='#FEFE62',high='#5D3A9B') + 
+	geom_hilight(node=vrntmrca, fill='gray',alpha=0.5)
+ptree.long <- ptree + labs(title='Longitudinal observations') + 
+	theme(plot.title=element_text(hjust=0.5,size=16,face='bold'))
 
 ## make a panel plot
 
-plbi.long <- ggplot(crud) + geom_point(aes(x=time,y=lbi20,col=state))
-fig.long <- plot_grid(ptree.long, plbi.long, nrow=2) 
+# reorder the data so that J's appear at the end (and get plotted last):
+crudI <- crud[which(crud$state=='I'),]
+crudJ <- crud[which(crud$state=='J'),]
+
+crud = rbind(crudI,crudJ)
+
+
+plbi.long <- ggplot(crud) + geom_point(aes(x=time-min(time),y=lbi20,col=state)) +
+	scale_color_discrete(name='Variant',breaks=c('I','J'),
+			type=c('#005AB5','#DC3220'))  + theme_classic() + 
+	ylab('LBI') + xlab('Time (years)')
+
+alnd <- align_plots(ptree.long,plbi.long,align='v',axis='lr')
+fig.long <- plot_grid(alnd[[1]],alnd[[2]],ncol=1)
+ 
 
 # do this for the 10% tree:
 tree <- tree.10
@@ -531,17 +574,109 @@ vrntmrca <- getMRCA(tree, vrns )
 #	geom_tippoint(aes(col=state))
 # ^this is working correctly, identifying the variant clade. 
 
-ptree <- p + aes(col=lbi10) + 
-	geom_hilight(node=vrntmrca, fill='red',alpha=0.25)
-ptree.10 <- ptree
+ptree <- p + #aes(col=lbi10) + 
+	geom_tippoint(aes(col=lbi10)) + geom_nodepoint(aes(col=lbi10)) +
+	scale_colour_continuous(name='LBI',
+        low='#FEFE62',high='#5D3A9B') + 
+	geom_hilight(node=vrntmrca, fill='gray',alpha=0.5)
+
+ptree.10 <- ptree + labs(title='Cross-sectional observations\nvariant @ 10%') + 
+	theme(plot.title=element_text(hjust=0.5,size=16,face='bold'))
+
+# reorder the data so that J's appear at the end (and get plotted last):
+crudI <- crud[which(crud$state=='I'),]
+crudJ <- crud[which(crud$state=='J'),]
+
+crud = rbind(crudI,crudJ)
 
 ## make a panel plot
-plbi.10 <- ggplot(crud) + geom_point(aes(x=time,y=lbi10,col=state))
-fig.10 <- plot_grid(ptree.10, plbi.10, nrow=2) 
+tree_xlim <- layer_scales(ptree.10)$x$get_limits()
 
-fig.var <- plot_grid(fig.10,fig.long,ncol=2)
+plbi.10 <- ggplot(crud) + geom_point(aes(x=time-min(time),y=lbi10,col=state)) +
+	scale_color_discrete(name='Variant',breaks=c('I','J'),
+			type=c('#005AB5','#DC3220'))  + theme_classic() + 
+	ylab('LBI') + xlab('Time (years)')
+
+alnd <- align_plots(ptree.10,plbi.10,align='v',axis='lr')
+
+fig.10 <- plot_grid(alnd[[1]],alnd[[2]],ncol=1) 
+
+# do this for the 90% tree:
+tree <- tree.90
+
+# want to add in rows for nodes with times and LBIs
+crud <- data.frame(time = tree$tip.height,
+	label = tree$tip.label)
+
+# the node labels have the times; extract these:
+m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
+crud2 <- data.frame(time=as.numeric(m), 
+		label = names(m))
+# the node labels are super clunky, but we need to keep them to match with the tree
+crud <- rbind(crud,crud2)
+
+# rearrange columns with labels first:
+crud <- crud[,c(2,1)]
+
+# calculate LBI for the tips and the nodes:
+crud$lbi10 <- lbi(tree, tau=10)
+
+# add in a column for the state of the node/tip:
+crud$state <- NA
+crud[grep('I',crud$label[1:513]),'state'] <- 'I'
+crud[grep('J',crud$label[1:513]),'state'] <- 'J'
+
+nodenms <- sapply(crud[514:1025,'label'], function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]-1))
+
+crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
+
+# make a ggtree object:
+p <- ggtree(tree)
+
+# merge the dataframe with LBI onto it:
+p <- p %<+% crud
+
+vrns <- crud[1:Ntip(tree),]
+vrns <- vrns[vrns$state=='J','label']
+vrntmrca <- getMRCA(tree, vrns )
+
+# double check that this works correctly:
+#p + geom_hilight(node=vrntmrca, fill='red') +
+#	geom_tippoint(aes(col=state))
+# ^this is working correctly, identifying the variant clade. 
+
+ptree <- p + #aes(col=lbi10) + 
+	geom_tippoint(aes(col=lbi10)) + geom_nodepoint(aes(col=lbi10)) +
+	scale_colour_continuous(name='LBI',
+        low='#FEFE62',high='#5D3A9B') + 
+	geom_hilight(node=vrntmrca, fill='gray',alpha=0.5)
+
+ptree.90 <- ptree + labs(title='Cross-sectional observations\nvariant @ 90%') + 
+	theme(plot.title=element_text(hjust=0.5,size=16,face='bold'))
+
+# reorder the data so that J's appear at the end (and get plotted last):
+crudI <- crud[which(crud$state=='I'),]
+crudJ <- crud[which(crud$state=='J'),]
+
+crud = rbind(crudI,crudJ)
+
+## make a panel plot
+tree_xlim <- layer_scales(ptree.10)$x$get_limits()
+
+plbi.90 <- ggplot(crud) + geom_point(aes(x=time-min(time),y=lbi10,col=state)) +
+	scale_color_discrete(name='Variant',breaks=c('I','J'),
+			type=c('#005AB5','#DC3220'))  + theme_classic() + 
+	ylab('LBI') + xlab('Time (years)')
+
+alnd <- align_plots(ptree.90,plbi.90,align='v',axis='lr')
+
+fig.90 <- plot_grid(alnd[[1]],alnd[[2]],ncol=1) 
 
 
+fig.cross <- plot_grid(fig.10,fig.90,ncol=2)
+fig.var <- plot_grid(fig.10,fig.90,fig.long,ncol=3)
+
+ggsave(fig.var, file='figures/varmodelfigs/phylowave.pdf',height=7,width=21)
 
 
 # now add in states:
