@@ -274,7 +274,7 @@ ptrees <- plot_grid(p1,p2,nrow=1)
 
 ## mimic the data figure:
 
-
+# This function will make the heatmap plots:
 getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title'){
 
         # calculate tree height:
@@ -511,5 +511,118 @@ axis(1, line=3.00,
 
 
 dev.off()
+
+## making figures that have boxplots for LBI~Group, and superspreader status
+## annotated onto the phylogenies
+
+getinsetfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
+
+	# want to add in rows for nodes with times and LBIs
+	crud <- data.frame(time = tree$tip.height,
+		label = tree$tip.label)
+
+	# the node labels have the times; extract these:
+	m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
+	crud2 <- data.frame(time=as.numeric(m), 
+			label = names(m))
+	# the node labels are super clunky, but we need to keep them to match with the tree
+	crud <- rbind(crud,crud2)
+
+	# rearrange columns with labels first:
+	crud <- crud[,c(2,1)]
+
+	# calculate LBI for the tips and the nodes:
+	crud$lbi20 <- lbi(tree, tau=20)
+
+	# add in a column for the state of the node/tip:
+	crud$state <- NA
+	crud[grep('IH',crud$label[1:ntests]),'state'] <- 'IH'
+	crud[grep('IL',crud$label[1:ntests]),'state'] <- 'IL'
+
+	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]+0))
+
+	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
+
+	# add a column for group:
+	#crud$group <- NA
+	#crud$group[grep(1,crud$state)] <- 'Group 1'
+	#crud$group[grep(2,crud$state)] <- 'Group 2'
+
+
+	# make a ggtree object:
+	p <- ggtree(tree)
+
+	# merge the dataframe with LBI onto it:
+	p <- p %<+% crud
+
+	# plot it!
+	#p1 <- p + geom_tippoint(aes(col=group)) + geom_nodepoint(aes(col=group)) + 
+	#	scale_color_discrete(name='Host subpopulation',
+	#	type=c('#E1BE6A','#40B0A6'))  +
+	#	theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
+	#	theme(legend.position='none')	
+	#	#theme(legend.text=element_text(size=18),legend.title=element_text(size=16,face='bold')) +
+	#	#theme(legend.position='left')
+
+	p1 <- p + aes(col=state) + geom_tree(linewidth=0.60) +
+		scale_color_discrete(name='Host',
+		type=c('#E1BE6A','#40B0A6')) +
+		theme(legend.position='none') +
+		labs(title=title) + theme(plot.title=element_text(hjust=0.5,face='bold',size=18))
+		#theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
+		#theme(legend.text=element_text(size=18),legend.title=element_text(size=16,face='bold')) +
+		#theme(legend.position='left')
+
+	## make a panel plot
+
+	p1.box <- ggplot(crud) + geom_boxplot(aes(x=state,y=lbi20,fill=state)) +
+		scale_fill_manual(name='Host' ,values=c('#E1BE6A','#40B0A6')) + 
+		theme_classic() + 
+		ylab('LBI') + 
+		xlab('Host') + 
+		theme(legend.position='none') +
+		theme(axis.text=element_text(size=18), 
+			axis.title=element_text(size=18, face='bold'))
+		
+
+	# make the tree and boxplot figures w/out the title first:
+	alnd <- align_plots(p1,p1.box,align='v',axis='lr')
+	fig.p1 <- plot_grid(alnd[[1]],alnd[[2]],ncol=1, rel_heights=c(2,0.5))
+
+	# make the LBI boxplots an inset:
+	fig.p1.inset <- ggdraw(p1) +
+		draw_plot(p1.box, 0.05, .6, .2, .35)  
+
+#	# create a common title:
+#	title <- ggdraw() + 
+#	  draw_label(
+#	    title,
+#	    fontface = 'bold',
+#	    x = titleadjust,
+#	    hjust = 0.0,
+#	    size = 18
+#	  ) +
+#	  theme(
+#	    # add margin on the left of the drawing canvas,
+#	    # so title is aligned with left edge of first plot
+#	    plot.margin = margin(0, 0, 0, 7)
+#	  )
+#
+#	# make the tree and boxplot figures w/out the title first:
+#
+#	# add the title:
+#	fig.p1 <- plot_grid(title, fig.p1, ncol=1, rel_heights=c(0.1,1))
+
+	return(fig.p1)
+}
+
+# create the individual sub-figures:
+#fig.1 <- getfig(tree1,'Altered infectiousness',titleadjust=0.40)
+#fig.2 <- getfig(tree2,'Altered susceptibility',titleadjust=0.40)
+#fig.3 <- getfig(tree3,'Altered infectiousness + preferential mixing',titleadjust=0.30)
+#fig.4 <- getfig(tree4,'Altered susceptibility + preferential mixing',titleadjust=0.25)
+#
+## place them in a combined figure:
+#mainfig <- plot_grid(fig.1,fig.2,fig.3,fig.4,byrow=T,nrow=2)
 
 

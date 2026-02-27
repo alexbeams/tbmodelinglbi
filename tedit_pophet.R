@@ -157,11 +157,11 @@ theta2 <- gettheta(mii=1,mij=1,zeta1=1/2,zeta2=2,
 	theta1=1,theta2=1,pH=0.2,fH=0.8)
 
 # 3. Preferential mixing turned on, and altered infectiousnes correlated w/it:
-theta3 <- gettheta(mii=2,mij=.1,zeta1=1,zeta2=1,
+theta3 <- gettheta(mii=2,mij=.5,zeta1=1,zeta2=1,
 	theta1=1/2,theta2=2,pH=0.2,fH=0.8)
 
 # 4. Preferential mixing turned on, and altsus correlated w/it:
-theta4 <- gettheta(mii=2,mij=.1,zeta1=1/2,zeta2=2,
+theta4 <- gettheta(mii=2,mij=.5,zeta1=1/2,zeta2=2,
 	theta1=1,theta2=1,pH=0.2,fH=0.8)
 
 
@@ -291,10 +291,16 @@ plottraj4$date <- as.Date(plottraj4$Time * 365)
 # We want to ensure we are sampling states according to the probabilities they occur in
 # the simulation, which will be affected by our parameter choices
 
-x1 <- plottraj1[plottraj1$Time < max(tms.lin4) & plottraj1$Time > min(tms.lin4),c('IH1','IL1','IH2','IL2')]
-x2 <- plottraj2[plottraj2$Time < max(tms.lin4) & plottraj2$Time > min(tms.lin4),c('IH1','IL1','IH2','IL2')]
-x3 <- plottraj3[plottraj3$Time < max(tms.lin4) & plottraj3$Time > min(tms.lin4),c('IH1','IL1','IH2','IL2')]
-x4 <- plottraj4[plottraj4$Time < max(tms.lin4) & plottraj4$Time > min(tms.lin4),c('IH1','IL1','IH2','IL2')]
+# for cross-sectional sampling similar to lineage 4:
+tmstart <- 45 #min(tms.lin4)
+tmend <- 50 #max(tms.lin4)
+ntests <- 2000
+
+
+x1 <- plottraj1[plottraj1$Time < tmend & plottraj1$Time > tmstart,c('Time','IH1','IL1','IH2','IL2')]
+x2 <- plottraj2[plottraj2$Time < tmend & plottraj2$Time > tmstart,c('Time','IH1','IL1','IH2','IL2')]
+x3 <- plottraj3[plottraj3$Time < tmend & plottraj3$Time > tmstart,c('Time','IH1','IL1','IH2','IL2')]
+x4 <- plottraj4[plottraj4$Time < tmend & plottraj4$Time > tmstart,c('Time','IH1','IL1','IH2','IL2')]
 
 y1 <- colSums(x1)/sum(colSums(x1))
 y2 <- colSums(x2)/sum(colSums(x2))
@@ -302,16 +308,88 @@ y3 <- colSums(x3)/sum(colSums(x3))
 y4 <- colSums(x4)/sum(colSums(x4))
 
 # randomly sample states according to the probabilities with which they were observed in the simulation:
-s1 <- c('IH1','IL1','IH2','IL2')[t(rmultinom(length(tms.lin4),1,prob=y1[c('IH1','IL1','IH2','IL2')])) %*% c(1,2,3,4)]
-s2 <- c('IH1','IL1','IH2','IL2')[t(rmultinom(length(tms.lin4),1,prob=y2[c('IH1','IL1','IH2','IL2')])) %*% c(1,2,3,4)]
-s3 <- c('IH1','IL1','IH2','IL2')[t(rmultinom(length(tms.lin4),1,prob=y3[c('IH1','IL1','IH2','IL2')])) %*% c(1,2,3,4)]
-s4 <- c('IH1','IL1','IH2','IL2')[t(rmultinom(length(tms.lin4),1,prob=y4[c('IH1','IL1','IH2','IL2')])) %*% c(1,2,3,4)]
+s1 <- c('IH1','IL1','IH2','IL2')[t(rmultinom(ntests,1,prob=y1[c('IH1','IL1','IH2','IL2')])) %*% c(1,2,3,4)]
+s2 <- c('IH1','IL1','IH2','IL2')[t(rmultinom(ntests,1,prob=y2[c('IH1','IL1','IH2','IL2')])) %*% c(1,2,3,4)]
+s3 <- c('IH1','IL1','IH2','IL2')[t(rmultinom(ntests,1,prob=y3[c('IH1','IL1','IH2','IL2')])) %*% c(1,2,3,4)]
+s4 <- c('IH1','IL1','IH2','IL2')[t(rmultinom(ntests,1,prob=y4[c('IH1','IL1','IH2','IL2')])) %*% c(1,2,3,4)]
 
 # create data frames with the tms.lin4 sampling times and the sampled state:
-tms.1 <- data.frame(Date=as.numeric(tms.lin4),Comp=s1) 
-tms.2 <- data.frame(Date=as.numeric(tms.lin4),Comp=s2) 
-tms.3 <- data.frame(Date=as.numeric(tms.lin4),Comp=s3) 
-tms.4 <- data.frame(Date=as.numeric(tms.lin4),Comp=s4) 
+tms.1 <- data.frame(Date=runif(ntests,tmstart,tmend),Comp=s1) 
+tms.2 <- data.frame(Date=runif(ntests,tmstart,tmend),Comp=s2) 
+tms.3 <- data.frame(Date=runif(ntests,tmstart,tmend),Comp=s3) 
+tms.4 <- data.frame(Date=runif(ntests,tmstart,tmend),Comp=s4) 
+
+tms.1 <- tms.1[order(tms.1$Date),]
+tms.2 <- tms.2[order(tms.2$Date),]
+tms.3 <- tms.3[order(tms.3$Date),]
+tms.4 <- tms.4[order(tms.4$Date),]
+
+
+
+
+## longitudinal sampling:
+#
+## set the minimum time for longitudinal sampling to commence:
+#mintime <- -120
+#ntests <- 500
+#
+#tms.1 <- plottraj1[plottraj1$Time > mintime,]
+#tms.1 <- tms.1[sort(sample(1:dim(tms.1)[1],ntests)),]
+#tms.1$N <- tms.1$IH1+tms.1$IL1+tms.1$IH2+tms.1$IL2
+#tms.1$pih1 <- tms.1$IH1/tms.1$N
+#tms.1$pil1 <- tms.1$IL1/tms.1$N
+#tms.1$pih2 <- tms.1$IH2/tms.1$N
+#tms.1$pil2 <- tms.1$IL2/tms.1$N
+#
+#tms.1$sampled <- apply(tms.1, 1, function(x) c('IH1','IL1','IH2','IL2')[which(t(rmultinom(1,1,prob=x[c('pih1','pil1','pih2','pil2')])) > 0)])
+#
+#tms.1 <- tms.1[,c('Time','sampled')]
+#colnames(tms.1) <- c('Date','Comp')
+#
+## for Sim 2:
+#tms.2 <- plottraj2[plottraj2$Time > mintime,]
+#tms.2 <- tms.2[sort(sample(1:dim(tms.2)[1],ntests)),]
+#tms.2$N <- tms.2$IH1+tms.2$IL1+tms.2$IH2+tms.2$IL2
+#tms.2$pih1 <- tms.2$IH1/tms.2$N
+#tms.2$pil1 <- tms.2$IL1/tms.2$N
+#tms.2$pih2 <- tms.2$IH2/tms.2$N
+#tms.2$pil2 <- tms.2$IL2/tms.2$N
+#
+#tms.2$sampled <- apply(tms.2, 1, function(x) c('IH1','IL1','IH2','IL2')[which(t(rmultinom(1,1,prob=x[c('pih1','pil1','pih2','pil2')])) > 0)])
+#
+#tms.2 <- tms.2[,c('Time','sampled')]
+#colnames(tms.2) <- c('Date','Comp')
+#
+## for Sim 3:
+#tms.3 <- plottraj3[plottraj3$Time > mintime,]
+#tms.3 <- tms.3[sort(sample(1:dim(tms.3)[1],ntests)),]
+#tms.3$N <- tms.3$IH1+tms.3$IL1+tms.3$IH2+tms.3$IL2
+#tms.3$pih1 <- tms.3$IH1/tms.3$N
+#tms.3$pil1 <- tms.3$IL1/tms.3$N
+#tms.3$pih2 <- tms.3$IH2/tms.3$N
+#tms.3$pil2 <- tms.3$IL2/tms.3$N
+#
+#tms.3$sampled <- apply(tms.3, 1, function(x) c('IH1','IL1','IH2','IL2')[which(t(rmultinom(1,1,prob=x[c('pih1','pil1','pih2','pil2')])) > 0)])
+#
+#tms.3 <- tms.3[,c('Time','sampled')]
+#colnames(tms.3) <- c('Date','Comp')
+#
+## for Sim 4:
+#tms.4 <- plottraj4[plottraj4$Time > mintime,]
+#tms.4 <- tms.4[sort(sample(1:dim(tms.4)[1],ntests)),]
+#tms.4$N <- tms.4$IH1+tms.4$IL1+tms.4$IH2+tms.4$IL2
+#tms.4$pih1 <- tms.4$IH1/tms.4$N
+#tms.4$pil1 <- tms.4$IL1/tms.4$N
+#tms.4$pih2 <- tms.4$IH2/tms.4$N
+#tms.4$pil2 <- tms.4$IL2/tms.4$N
+#
+#tms.4$sampled <- apply(tms.4, 1, function(x) c('IH1','IL1','IH2','IL2')[which(t(rmultinom(1,1,prob=x[c('pih1','pil1','pih2','pil2')])) > 0)])
+#
+#tms.4 <- tms.4[,c('Time','sampled')]
+#colnames(tms.4) <- c('Date','Comp')
+#
+
+
 
 # create a function to simulate trees given tms and output:
 getsimtree <- function(tms,output){
@@ -378,7 +456,7 @@ tiplabels(pch=20,col=tips_cols)
 
 # function to plot ggtrees colored in with Host subpopulation, and accompanying
 # boxplots of LBI~Host subpopulation:
-getfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex){
+getfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
 
 	# want to add in rows for nodes with times and LBIs
 	crud <- data.frame(time = tree$tip.height,
@@ -399,12 +477,12 @@ getfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex){
 
 	# add in a column for the state of the node/tip:
 	crud$state <- NA
-	crud[grep('IH1',crud$label[1:513]),'state'] <- 'IH1'
-	crud[grep('IL1',crud$label[1:513]),'state'] <- 'IL1'
-	crud[grep('IH2',crud$label[1:513]),'state'] <- 'IH2'
-	crud[grep('IL2',crud$label[1:513]),'state'] <- 'IL2'
+	crud[grep('IH1',crud$label[1:ntests]),'state'] <- 'IH1'
+	crud[grep('IL1',crud$label[1:ntests]),'state'] <- 'IL1'
+	crud[grep('IH2',crud$label[1:ntests]),'state'] <- 'IH2'
+	crud[grep('IL2',crud$label[1:ntests]),'state'] <- 'IL2'
 
-	nodenms <- sapply(crud[514:1025,'label'], function(z) substr(z, regexpr("S+",z)[1]+3, regexpr(".[+]=",z)[1]))
+	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+3, regexpr(".[+]=",z)[1]))
 
 	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
 
@@ -421,7 +499,7 @@ getfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex){
 	p <- p %<+% crud
 
 	# plot it!
-	p1 <- p + geom_tippoint(aes(col=group, cex=ptcex)) + geom_nodepoint(aes(col=group, cex=ptcex)) + 
+	p1 <- p + geom_tippoint(aes(col=group)) + geom_nodepoint(aes(col=group)) + 
 		scale_color_discrete(name='Host subpopulation',
 		type=c('#E1BE6A','#40B0A6'))  +
 		theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
@@ -477,6 +555,6 @@ fig.4 <- getfig(tree4,'Altered susceptibility + preferential mixing',titleadjust
 # place them in a combined figure:
 mainfig <- plot_grid(fig.1,fig.2,fig.3,fig.4,byrow=T,nrow=2)
 
-#ggsave(mainfig, file='figures/pophetmodelfigs/mainfig.png', dpi=300, width=20,height=10)
+ggsave(mainfig, file='figures/pophetmodelfigs/mainfig_crosssectional.png', dpi=300, width=20,height=10)
 
 
