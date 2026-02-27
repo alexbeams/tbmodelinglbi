@@ -11,34 +11,18 @@ source('lbi.R')
 #############
 #############
 
-# read in the dates of collection for lineage 4:
-# We will probably want to replace this with randomly generated times later:
-source('loaddates.R')
-
-tms.lin1$hiv <- 'I'
-tms.lin2$hiv <- 'I'
-tms.lin3$hiv <- 'I'
-tms.lin4$hiv <- 'I'
-
-tms.lin1 <- tms.lin1[,1]
-tms.lin2 <- tms.lin2[,1]
-tms.lin3 <- tms.lin3[,1]
-tms.lin4 <- tms.lin4[,1]
-
-# let's simulate a lineage 4 tree for the time period
-
-# this is the julian date of the most recent sampling event:
-tmax <- max(tms.lin4)
-
-# we think we want to simulate the TMRCA about 400 years prior
-tstart <- tmax-175*365
+ntests <- 500
 
 # time to simulate:
-time <- c(tstart,tmax)/365
+#time <- c(tstart,tmax)/365
 
+time <- c(-125,50)
 
-# let's put the sampling times on the same scale:
-tms.lin4 <- tms.lin4/365
+# when should we start to sample?
+tm1 <- 45
+tms.lin4 <- runif(ntests,min=tm1,max=time[2])
+tms.lin4 <- tms.lin4[order(tms.lin4)]
+
 
 # what is the total population size?
 Npop <- 2.0 * 10^5
@@ -412,51 +396,155 @@ tree4 <- getsimtree(tms.4,out4)
 
 # Make a figure in base R to make sure things are working ok:
 
-#pdf(file='figures/pophetmodelfigs/trees.pdf',width=6,height=9)
-par(mfrow=c(2,2))
+##pdf(file='figures/pophetmodelfigs/trees.pdf',width=6,height=9)
+#par(mfrow=c(2,2))
+#
+#tree <- tree1
+#plot(tree, type='phylogram',show.tip.label=F,main='Altered infectiousness, no preferential mixing')
+#tips_cols <- ifelse(grepl(x=tree$tip.label,pattern = c("1_")),"#005AB5","#DC3220")
+#nodes_cols <- ifelse(grepl(x=tree$node.label,pattern="+IH1+"),"#005AB5",
+#	ifelse(grepl(x=tree$node.label,pattern="+IL1+"),'#005AB5','#DC3220') )
+#tiplabels(pch=20,col=tips_cols)
+##nodelabels(pch=20,col=nodes_cols)
+#legend('bottomleft',legend=c('Group1','Group2'),col=c('#005AB5','#DC3220'),pch=20)
+#
+#tree <- tree2
+#plot(tree, type='phylogram',show.tip.label=F,main='Altered susceptibility, no preferential mixing')
+#tips_cols <- ifelse(grepl(x=tree$tip.label,pattern = c("1_")),"#005AB5","#DC3220")
+#nodes_cols <- ifelse(grepl(x=tree$node.label,pattern="+IH1+"),"#005AB5",
+#	ifelse(grepl(x=tree$node.label,pattern="+IL1+"),'#005AB5','#DC3220') )
+#tiplabels(pch=20,col=tips_cols)
+##nodelabels(pch=20,col=nodes_cols)
+#
+#tree <- tree3
+#plot(tree, type='phylogram',show.tip.label=F,main='Altered infectiousness + preferential mixing')
+#tips_cols <- ifelse(grepl(x=tree$tip.label,pattern = c("1_")),"#005AB5","#DC3220")
+#nodes_cols <- ifelse(grepl(x=tree$node.label,pattern="+IH1+"),"#005AB5",
+#	ifelse(grepl(x=tree$node.label,pattern="+IL1+"),'#005AB5','#DC3220') )
+#tiplabels(pch=20,col=tips_cols)
+##nodelabels(pch=20,col=nodes_cols)
+#
+#tree <- tree4
+#plot(tree, type='phylogram',show.tip.label=F,main='Altered susceptibility + preferential mixing')
+#tips_cols <- ifelse(grepl(x=tree$tip.label,pattern = c("1_")),"#005AB5","#DC3220")
+#nodes_cols <- ifelse(grepl(x=tree$node.label,pattern="+IH1+"),"#005AB5",
+#	ifelse(grepl(x=tree$node.label,pattern="+IL1+"),'#005AB5','#DC3220') )
+#tiplabels(pch=20,col=tips_cols)
+##nodelabels(pch=20,col=nodes_cols)
+#
+##dev.off()
+#
+#
+### Want to generate plots of the trees with edges annotated with LBI,
+### the variant clade highlighted, and display LBI~time:
+#
+## function to plot ggtrees colored in with Host subpopulation, and accompanying
+## boxplots of LBI~Host subpopulation:
+#getfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
+#
+#	# want to add in rows for nodes with times and LBIs
+#	crud <- data.frame(time = tree$tip.height,
+#		label = tree$tip.label)
+#
+#	# the node labels have the times; extract these:
+#	m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
+#	crud2 <- data.frame(time=as.numeric(m), 
+#			label = names(m))
+#	# the node labels are super clunky, but we need to keep them to match with the tree
+#	crud <- rbind(crud,crud2)
+#
+#	# rearrange columns with labels first:
+#	crud <- crud[,c(2,1)]
+#
+#	# calculate LBI for the tips and the nodes:
+#	crud$lbi20 <- lbi(tree, tau=20)
+#
+#	# add in a column for the state of the node/tip:
+#	crud$state <- NA
+#	crud[grep('IH1',crud$label[1:ntests]),'state'] <- 'IH1'
+#	crud[grep('IL1',crud$label[1:ntests]),'state'] <- 'IL1'
+#	crud[grep('IH2',crud$label[1:ntests]),'state'] <- 'IH2'
+#	crud[grep('IL2',crud$label[1:ntests]),'state'] <- 'IL2'
+#
+#	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+3, regexpr(".[+]=",z)[1]))
+#
+#	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
+#
+#	# add a column for group:
+#	crud$group <- NA
+#	crud$group[grep(1,crud$state)] <- 'Group 1'
+#	crud$group[grep(2,crud$state)] <- 'Group 2'
+#
+#
+#	# make a ggtree object:
+#	p <- ggtree(tree)
+#
+#	# merge the dataframe with LBI onto it:
+#	p <- p %<+% crud
+#
+#	# plot it!
+#	p1 <- p + geom_tippoint(aes(col=group)) + geom_nodepoint(aes(col=group)) + 
+#		scale_color_discrete(name='Host subpopulation',
+#		type=c('#E1BE6A','#40B0A6'))  +
+#		theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
+#		theme(legend.position='none')	
+#		#theme(legend.text=element_text(size=18),legend.title=element_text(size=16,face='bold')) +
+#		#theme(legend.position='left')
+#
+#	## make a panel plot
+#
+#	p1.box <- ggplot(crud) + geom_boxplot(aes(x=group,y=lbi20,fill=group)) +
+#		scale_fill_manual(name='Host\nsubpopulation' ,values=c('#E1BE6A','#40B0A6')) + 
+#		theme_classic() + 
+#		ylab('LBI') + 
+#		xlab('Host subpopulation') + 
+#		theme(legend.position='none') +
+#		theme(axis.text=element_text(size=18), 
+#			axis.title=element_text(size=18, face='bold'))
+#		
+#
+#	# make the tree and boxplot figures w/out the title first:
+#	alnd <- align_plots(p1,p1.box,align='h',axis='lr')
+#	fig.p1 <- plot_grid(alnd[[1]],alnd[[2]],ncol=2, rel_widths=c(1,0.5))
+#
+#	# create a common title:
+#	title <- ggdraw() + 
+#	  draw_label(
+#	    title,
+#	    fontface = 'bold',
+#	    x = titleadjust,
+#	    hjust = 0.0,
+#	    size = 18
+#	  ) +
+#	  theme(
+#	    # add margin on the left of the drawing canvas,
+#	    # so title is aligned with left edge of first plot
+#	    plot.margin = margin(0, 0, 0, 7)
+#	  )
+#
+#	# make the tree and boxplot figures w/out the title first:
+#
+#	# add the title:
+#	fig.p1 <- plot_grid(title, fig.p1, ncol=1, rel_heights=c(0.1,1))
+#
+#	return(fig.p1)
+#}
+#
+## create the individual sub-figures:
+#fig.1 <- getfig(tree1,'Altered infectiousness',titleadjust=0.40)
+#fig.2 <- getfig(tree2,'Altered susceptibility',titleadjust=0.40)
+#fig.3 <- getfig(tree3,'Altered infectiousness + preferential mixing',titleadjust=0.30)
+#fig.4 <- getfig(tree4,'Altered susceptibility + preferential mixing',titleadjust=0.25)
+#
+## place them in a combined figure:
+#mainfig <- plot_grid(fig.1,fig.2,fig.3,fig.4,byrow=T,nrow=2)
+#
+#ggsave(mainfig, file='figures/pophetmodelfigs/mainfig_crosssectional.png', dpi=300, width=20,height=10)
+#
 
-tree <- tree1
-plot(tree, type='phylogram',show.tip.label=F,main='Altered infectiousness, no preferential mixing')
-tips_cols <- ifelse(grepl(x=tree$tip.label,pattern = c("1_")),"#005AB5","#DC3220")
-nodes_cols <- ifelse(grepl(x=tree$node.label,pattern="+IH1+"),"#005AB5",
-	ifelse(grepl(x=tree$node.label,pattern="+IL1+"),'#005AB5','#DC3220') )
-tiplabels(pch=20,col=tips_cols)
-#nodelabels(pch=20,col=nodes_cols)
-legend('bottomleft',legend=c('Group1','Group2'),col=c('#005AB5','#DC3220'),pch=20)
-
-tree <- tree2
-plot(tree, type='phylogram',show.tip.label=F,main='Altered susceptibility, no preferential mixing')
-tips_cols <- ifelse(grepl(x=tree$tip.label,pattern = c("1_")),"#005AB5","#DC3220")
-nodes_cols <- ifelse(grepl(x=tree$node.label,pattern="+IH1+"),"#005AB5",
-	ifelse(grepl(x=tree$node.label,pattern="+IL1+"),'#005AB5','#DC3220') )
-tiplabels(pch=20,col=tips_cols)
-#nodelabels(pch=20,col=nodes_cols)
-
-tree <- tree3
-plot(tree, type='phylogram',show.tip.label=F,main='Altered infectiousness + preferential mixing')
-tips_cols <- ifelse(grepl(x=tree$tip.label,pattern = c("1_")),"#005AB5","#DC3220")
-nodes_cols <- ifelse(grepl(x=tree$node.label,pattern="+IH1+"),"#005AB5",
-	ifelse(grepl(x=tree$node.label,pattern="+IL1+"),'#005AB5','#DC3220') )
-tiplabels(pch=20,col=tips_cols)
-#nodelabels(pch=20,col=nodes_cols)
-
-tree <- tree4
-plot(tree, type='phylogram',show.tip.label=F,main='Altered susceptibility + preferential mixing')
-tips_cols <- ifelse(grepl(x=tree$tip.label,pattern = c("1_")),"#005AB5","#DC3220")
-nodes_cols <- ifelse(grepl(x=tree$node.label,pattern="+IH1+"),"#005AB5",
-	ifelse(grepl(x=tree$node.label,pattern="+IL1+"),'#005AB5','#DC3220') )
-tiplabels(pch=20,col=tips_cols)
-#nodelabels(pch=20,col=nodes_cols)
-
-#dev.off()
 
 
-## Want to generate plots of the trees with edges annotated with LBI,
-## the variant clade highlighted, and display LBI~time:
-
-# function to plot ggtrees colored in with Host subpopulation, and accompanying
-# boxplots of LBI~Host subpopulation:
-getfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
+getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title'){
 
 	# want to add in rows for nodes with times and LBIs
 	crud <- data.frame(time = tree$tip.height,
@@ -473,88 +561,186 @@ getfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
 	crud <- crud[,c(2,1)]
 
 	# calculate LBI for the tips and the nodes:
-	crud$lbi20 <- lbi(tree, tau=20)
+	crud$lbi <- lbi(tree, tau=taulbi)
 
 	# add in a column for the state of the node/tip:
 	crud$state <- NA
-	crud[grep('IH1',crud$label[1:ntests]),'state'] <- 'IH1'
-	crud[grep('IL1',crud$label[1:ntests]),'state'] <- 'IL1'
-	crud[grep('IH2',crud$label[1:ntests]),'state'] <- 'IH2'
-	crud[grep('IL2',crud$label[1:ntests]),'state'] <- 'IL2'
+	crud[grep('IH1',crud$label[1:ntests]),'state'] <- 'Group 1'
+	crud[grep('IL1',crud$label[1:ntests]),'state'] <- 'Group 1'
+	crud[grep('IH2',crud$label[1:ntests]),'state'] <- 'Group 2'
+	crud[grep('IL2',crud$label[1:ntests]),'state'] <- 'Group 2'
 
-	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+3, regexpr(".[+]=",z)[1]))
+
+	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+3, regexpr(".[+]=",z)[1]-0))
+	nodenms[grep('IH1',nodenms)] <- 'Group 1'
+	nodenms[grep('IL1',nodenms)] <- 'Group 1'
+	nodenms[grep('IH2',nodenms)] <- 'Group 2'
+	nodenms[grep('IL2',nodenms)] <- 'Group 2'
+
 
 	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
 
-	# add a column for group:
-	crud$group <- NA
-	crud$group[grep(1,crud$state)] <- 'Group 1'
-	crud$group[grep(2,crud$state)] <- 'Group 2'
+	p <- ggtree(tree,layout='rectangular') %<+% crud
 
-
-	# make a ggtree object:
-	p <- ggtree(tree)
-
-	# merge the dataframe with LBI onto it:
-	p <- p %<+% crud
-
-	# plot it!
-	p1 <- p + geom_tippoint(aes(col=group)) + geom_nodepoint(aes(col=group)) + 
-		scale_color_discrete(name='Host subpopulation',
-		type=c('#E1BE6A','#40B0A6'))  +
-		theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
-		theme(legend.position='none')	
+	p1 <- p + aes(col=state) + geom_tree(linewidth=0.60) +
+		scale_color_manual(name='Host',
+		values=c('Group 1'='#E1BE6A','Group 2'='#40B0A6')) +
+		theme(legend.position='none') +
+		labs(title=title) + theme(plot.title=element_text(hjust=0.5,face='bold',size=18))
+		#theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
 		#theme(legend.text=element_text(size=18),legend.title=element_text(size=16,face='bold')) +
 		#theme(legend.position='left')
 
-	## make a panel plot
 
-	p1.box <- ggplot(crud) + geom_boxplot(aes(x=group,y=lbi20,fill=group)) +
-		scale_fill_manual(name='Host\nsubpopulation' ,values=c('#E1BE6A','#40B0A6')) + 
+        # calculate tree height:
+        treeheight <- max(node.depth.edgelength(tree))
+
+        # use cophenetic distances to calculate THD and No. of close relatives:
+        x = cophenetic(tree)
+
+        # calculate statistics for the tree (THD, LBI, No. of close relatives):
+
+        # calculate THD from cophenetic distances:
+        dat <- apply(x, 1, function(z) sum(exp(-z/tauthd)))
+
+        # organize into a dataframe:
+        dat <- as.data.frame(dat)
+        colnames(dat) <- 'THD'
+        dat$label = rownames(dat)
+        dat <- dat[,c(2,1)]
+
+        # calculate LBI directly from the tree:
+        dat$LBI <- lbi(tree,tau=taulbi)[1:length(tree$tip.label)]
+
+	# save the raw values in columns:
+	dat$LBIraw <- dat$LBI
+
+	# standardize statistics for ease of comparison (uncomment to show raw stats):
+	dat$LBI <- (dat$LBI-mean(dat$LBI))/sd(dat$LBI)
+
+	# create a ggtree plot:
+       	plin4 <- p1
+ 
+
+	lbidat <- as.data.frame(dat[,'LBIraw'])
+	rownames(lbidat) <- rownames(dat)
+	colnames(lbidat) <- 'LBI'
+
+        # use a heatmap to visualize the statistics:
+        heatfig <-  gheatmap(plin4,lbidat,
+                colnames=T, colnames_position="bottom", hjust=0.0,
+                colnames_offset_y=-3,colnames_angle=-45,width=0.1)+
+                scale_fill_continuous(name='Value of\nLBI\nat tips\n(raw)',
+                low='#FEFE62',high='#5D3A9B') +
+                theme(plot.margin=unit(c(1,1,3,1),'cm')) +
+                coord_cartesian(clip = 'off') +
+                ggtitle(title) +
+                theme(plot.title=element_text(hjust=0.5,size=18,face="bold")) + 
+		theme(axis.text=element_text(size=18), 
+			axis.title=element_text(size=18, face='bold')) +
+		theme(legend.text = element_text(size=16), legend.key.size = unit(1.0,'cm'),
+			legend.title=element_text(size=18)) + 
+		guides(color=guide_legend(override.aes=list(linewidth=2)))
+	
+	#reorder the factor levels in crud$state:
+	# If we want to just look at LBI at the tips, we need to just use the first
+	# ntests rows of crud:
+	crud$state <- factor(crud$state, levels=c('Group 1','Group 2'))
+
+	p1.box <- ggplot(crud[1:ntests,]) + geom_boxplot(aes(x=state,y=lbi,fill=state)) +
+		scale_fill_manual(name='Host' ,values=c('Group 1'='#E1BE6A','Group 2'='#40B0A6')) + 
 		theme_classic() + 
-		ylab('LBI') + 
-		xlab('Host subpopulation') + 
+		ylab('LBI (raw)') + 
+		xlab('Subpopulation') + 
 		theme(legend.position='none') +
 		theme(axis.text=element_text(size=18), 
 			axis.title=element_text(size=18, face='bold'))
-		
+	
 
 	# make the tree and boxplot figures w/out the title first:
-	alnd <- align_plots(p1,p1.box,align='h',axis='lr')
-	fig.p1 <- plot_grid(alnd[[1]],alnd[[2]],ncol=2, rel_widths=c(1,0.5))
+	alnd <- align_plots(heatfig,p1.box,align='v',axis='lr')
+	fig.p1 <- plot_grid(alnd[[1]],alnd[[2]],ncol=1, rel_heights=c(2,0.5))
 
-	# create a common title:
-	title <- ggdraw() + 
-	  draw_label(
-	    title,
-	    fontface = 'bold',
-	    x = titleadjust,
-	    hjust = 0.0,
-	    size = 18
-	  ) +
-	  theme(
-	    # add margin on the left of the drawing canvas,
-	    # so title is aligned with left edge of first plot
-	    plot.margin = margin(0, 0, 0, 7)
-	  )
 
-	# make the tree and boxplot figures w/out the title first:
 
-	# add the title:
-	fig.p1 <- plot_grid(title, fig.p1, ncol=1, rel_heights=c(0.1,1))
-
-	return(fig.p1)
+        return(list(fig.p1,dat))
 }
 
-# create the individual sub-figures:
-fig.1 <- getfig(tree1,'Altered infectiousness',titleadjust=0.40)
-fig.2 <- getfig(tree2,'Altered susceptibility',titleadjust=0.40)
-fig.3 <- getfig(tree3,'Altered infectiousness + preferential mixing',titleadjust=0.30)
-fig.4 <- getfig(tree4,'Altered susceptibility + preferential mixing',titleadjust=0.25)
 
-# place them in a combined figure:
-mainfig <- plot_grid(fig.1,fig.2,fig.3,fig.4,byrow=T,nrow=2)
+# 1. No preferential mixing, but altered infectiousness (same as null model)
+fig1 <- getmainplot(tree1,title='Altered infectiousness',taulbi=2)[[1]]
 
-ggsave(mainfig, file='figures/pophetmodelfigs/mainfig_crosssectional.png', dpi=300, width=20,height=10)
+# 2. No preferential mixing, but altered susceptibility:
+fig2 <- getmainplot(tree2, title='Altered susceptibility')[[1]]
+
+# 3. Preferential mixing turned on, and altered infectiousnes correlated w/it:
+fig3 <- getmainplot(tree3, title='Altered infectiousness +\npreferential mixing',taulbi=2)[[1]]
+
+# 4. Preferential mixing turned on, and altsus correlated w/it:
+fig4 <- getmainplot(tree4, title='Altered susceptibility +\npreferential mixing',taulbi=2)[[1]]
+
+fig <- plot_grid(fig1,fig2,fig3,fig4,nrow=1)
+
+ggsave(fig, file='figures/pophetmodelfigs/pophetmodeltrees.png', dpi=600, height=16, width=24)
+
+gettauplot <- function(tree,title='add a title!'){
+
+	# want to add in rows for nodes with times and LBIs
+	crud <- data.frame(time = tree$tip.height,
+		label = tree$tip.label)
+
+	# the node labels have the times; extract these:
+	m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
+	crud2 <- data.frame(time=as.numeric(m), 
+			label = names(m))
+	# the node labels are super clunky, but we need to keep them to match with the tree
+	crud <- rbind(crud,crud2)
+
+	# rearrange columns with labels first:
+	crud <- crud[,c(2,1)]
+
+	# calculate LBI for the tips and the nodes for lots of tau values:
+
+	# tau vals for plotting:
+	tauvals <- seq(-4,2, length=30)
+	tauvals <- 10^tauvals
+
+	for(tau in tauvals) crud[,paste0('lbi',tau)] <- lbi(tree, tau=tau)
+
+	# add in a column for the state of the node/tip:
+	crud$state <- NA
+	crud[grep('IH1',crud$label[1:ntests]),'state'] <- 'Group 1'
+	crud[grep('IL1',crud$label[1:ntests]),'state'] <- 'Group 1'
+	crud[grep('IH2',crud$label[1:ntests]),'state'] <- 'Group 2'
+	crud[grep('IL2',crud$label[1:ntests]),'state'] <- 'Group 2'
+
+
+	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]+0))
+
+	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
+
+	ratios <- apply(crud[,paste0('lbi',tauvals)], 2, function(x) mean(x[crud$state=='Group 2'])/mean(x[crud$state=='Group 1'])  )
+
+	plot(tauvals, ratios, xlab=bquote(tau),ylab='LBI ratio (Group 2/Group 1)',  
+		type='l',lwd=3, ylim=c(0, max(ratios)*1.5),
+		cex.axis=1.3,cex.lab=1.3, main=title)
+}
+
+pdf(file='figures/pophetmodelfigs/tauplot_altinf.pdf',height=6,width=6)
+gettauplot(tree1, title='Altered infectiousness')
+dev.off()
+
+pdf(file='figures/pophetmodelfigs/tauplot_altsus.pdf',height=6,width=6)
+gettauplot(tree2, title='Altered susceptibility')
+dev.off()
+
+pdf(file='figures/pophetmodelfigs/tauplot_altinf_pref.pdf',height=6,width=6)
+gettauplot(tree3, title='Altered infectiousness + preferential mixing')
+dev.off()
+
+pdf(file='figures/pophetmodelfigs/tauplot_altsus_pref.pdf',height=6,width=6)
+gettauplot(tree4, title='Altered susceptibility + preferential mixing')
+dev.off()
+
 
 

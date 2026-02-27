@@ -9,32 +9,15 @@ source("compile_variant_and_superspreading_model.R")
 #############
 #############
 
-source('loaddates.R')
-
-tms.lin1$hiv <- 'I'
-tms.lin2$hiv <- 'I'
-tms.lin3$hiv <- 'I'
-tms.lin4$hiv <- 'I'
-
-tms.lin1 <- tms.lin1[,1]
-tms.lin2 <- tms.lin2[,1]
-tms.lin3 <- tms.lin3[,1]
-tms.lin4 <- tms.lin4[,1]
-
-# let's simulate a lineage 4 tree for the time period
-
-# this is the julian date of the most recent sampling event:
-tmax <- max(tms.lin4)
-
-# we think we want to simulate the TMRCA about 400 years prior
-tstart <- tmax-175*365
-
-# time to simulate:
-time <- c(tstart,tmax)/365
+ntests <- 500
 
 
-# let's put the sampling times on the same scale:
-tms.lin4 <- tms.lin4/365
+time <- c(-125,50)
+
+# when should we start to sample?
+tm1 <- 45
+tms.lin4 <- runif(ntests,min=tm1,max=time[2])
+tms.lin4 <- tms.lin4[order(tms.lin4)]
 
 # what is the total population size?
 Npop <- 2.0 * 10^5
@@ -221,9 +204,8 @@ getsimtree <- function(tms,output){
 
 
 tree1 <- getsimtree(tms.lin4,out1)
-#tree2 <- getsimtree(tms.lin4,out2)
 
-tms2.lin4 = runif(-100,max(tms.lin4),n=513)
+tms2.lin4 = runif(-100,max(tms.lin4),n=ntests)
 tree2 <- getsimtree(tms2.lin4,out1)
 
 tree3 <- getsimtree(tms.lin4,out2)
@@ -231,51 +213,90 @@ tree4 <- getsimtree(tms2.lin4,out2)
 
 #par(mfrow=c(1,3))
 
-## variant @ 1%
-tree <- tree1
-
-plot(tree, type='fan',show.tip.label=F)
-tips_cols <- ifelse(grepl(x=tree$tip.label,pattern="I"),"#005AB5","#DC3220")
-nodes_cols <- ifelse(grepl(x=tree$node.label,pattern="I"),"#005AB5","#DC3220")
-tiplabels(pch=20,col=tips_cols)
-nodelabels(pch=20,col=nodes_cols)
-
-x <- cophenetic(tree)
-tau <- mean(x)*.01
-dat <- apply(x, 1, function(z) sum(exp(-z/tau)))
-dat <- as.data.frame(dat)
-colnames(dat) <- 'thd'
-dat$label = rownames(dat)
-dat <- dat[,c(2,1)]
-dat$var <- apply(x,1,var)
-dat$min <- apply(x,1,function(x) min(x[x>0]) )
-source('lbi.R')
-
-dat$lbi <- lbi(tree,tau=50)[1:length(tree$tip.label)]
-
-# now add in states:
-dat$state <- 0
-dat[grep('I',tree$tip.label),'state'] <- 'I'
-dat[grep('J',tree$tip.label),'state'] <- 'J'
+### variant @ 1%
+#tree <- tree1
+#
+#plot(tree, type='fan',show.tip.label=F)
+#tips_cols <- ifelse(grepl(x=tree$tip.label,pattern="I"),"#005AB5","#DC3220")
+#nodes_cols <- ifelse(grepl(x=tree$node.label,pattern="I"),"#005AB5","#DC3220")
+#tiplabels(pch=20,col=tips_cols)
+#nodelabels(pch=20,col=nodes_cols)
+#
+#x <- cophenetic(tree)
+#tau <- mean(x)*.01
+#dat <- apply(x, 1, function(z) sum(exp(-z/tau)))
+#dat <- as.data.frame(dat)
+#colnames(dat) <- 'thd'
+#dat$label = rownames(dat)
+#dat <- dat[,c(2,1)]
+#dat$var <- apply(x,1,var)
+#dat$min <- apply(x,1,function(x) min(x[x>0]) )
+#source('lbi.R')
+#
+#dat$lbi <- lbi(tree,tau=50)[1:length(tree$tip.label)]
+#
+## now add in states:
+#dat$state <- 0
+#dat[grep('I',tree$tip.label),'state'] <- 'I'
+#dat[grep('J',tree$tip.label),'state'] <- 'J'
 
 
 # load the LBI function:
 source('lbi.R')
 
 
-# make plots of each tree
-p1 <- ggtree(tree1,layout='circular')
-p2 <- ggtree(tree2,layout='circular')
+## make plots of each tree
+#p1 <- ggtree(tree1,layout='circular')
+#p2 <- ggtree(tree2,layout='circular')
+#
+#p1 <- p1 + labs(title='') + theme(plot.title=element_text(hjust=0.5,size=18,face="bold"))
+#p2 <- p2 + labs(title='') + theme(plot.title=element_text(hjust=0.5,size=18,face="bold"))
+#
+#ptrees <- plot_grid(p1,p2,nrow=1)
+#
+### mimic the data figure:
 
-p1 <- p1 + labs(title='') + theme(plot.title=element_text(hjust=0.5,size=18,face="bold"))
-p2 <- p2 + labs(title='') + theme(plot.title=element_text(hjust=0.5,size=18,face="bold"))
-
-ptrees <- plot_grid(p1,p2,nrow=1)
-
-## mimic the data figure:
+# This function will make the heatmap plots:
 
 # This function will make the heatmap plots:
 getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title'){
+
+	# want to add in rows for nodes with times and LBIs
+	crud <- data.frame(time = tree$tip.height,
+		label = tree$tip.label)
+
+	# the node labels have the times; extract these:
+	m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
+	crud2 <- data.frame(time=as.numeric(m), 
+			label = names(m))
+	# the node labels are super clunky, but we need to keep them to match with the tree
+	crud <- rbind(crud,crud2)
+
+	# rearrange columns with labels first:
+	crud <- crud[,c(2,1)]
+
+	# calculate LBI for the tips and the nodes:
+	crud$lbi <- lbi(tree, tau=taulbi)
+
+	# add in a column for the state of the node/tip:
+	crud$state <- NA
+	crud[grep('IH',crud$label[1:ntests]),'state'] <- 'IH'
+	crud[grep('IL',crud$label[1:ntests]),'state'] <- 'IL'
+
+	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]+0))
+	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
+
+	p <- ggtree(tree,layout='rectangular') %<+% crud
+
+	p1 <- p + aes(col=state) + geom_tree(linewidth=0.60) +
+		scale_color_manual(name='Host',
+		values=c('IL'='gray80','IH'='gray27')) +
+		theme(legend.position='none') +
+		labs(title=title) + theme(plot.title=element_text(hjust=0.5,face='bold',size=18))
+		#theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
+		#theme(legend.text=element_text(size=18),legend.title=element_text(size=16,face='bold')) +
+		#theme(legend.position='left')
+
 
         # calculate tree height:
         treeheight <- max(node.depth.edgelength(tree))
@@ -284,9 +305,6 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
         x = cophenetic(tree)
 
         # calculate statistics for the tree (THD, LBI, No. of close relatives):
-        #tauthd <- 5 #bandwidth for THD
-        #taulbi <- 4 #bandwidth for LBI
-        #tauclust <- 12 #threshold distance for No. of Close Relatives
 
         # calculate THD from cophenetic distances:
         dat <- apply(x, 1, function(z) sum(exp(-z/tauthd)))
@@ -319,10 +337,27 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
         clusts <- cutree(hc, h=tauclust)
         dat[,'Cluster Size (complete)'] <- table(clusts)[clusts]
 
-	# create a ggtree plot:
-        plin4 <- ggtree(tree, layout='rectangular')
+	# save the raw values in columns:
+	dat$LBIraw <- dat$LBI
+	dat$THDraw <- dat$THD
+	dat$nrelativesraw <- dat$nrelatives
+	dat$clustcompraw <- dat$clustcompraw
+	dat$clustsingraw <- dat$clustsingraw
 
-        # rename the columns:
+
+	# standardize statistics for ease of comparison (uncomment to show raw stats):
+	dat$LBI <- (dat$LBI-mean(dat$LBI))/sd(dat$LBI)
+	dat$THD <- (dat$THD-mean(dat$THD))/sd(dat$THD)
+	dat$nrelatives <- (dat$nrelatives-mean(dat$nrelatives))/sd(dat$nrelatives)
+	dat[,'Cluster Size (complete)'] <- (dat[,'Cluster Size (complete)']-mean(dat[,'Cluster Size (complete)']))/sd(dat[,'Cluster Size (complete)'])
+	dat[,'Cluster Size (single)'] <- (dat[,'Cluster Size (single)']-mean(dat[,'Cluster Size (single)']))/sd(dat[,'Cluster Size (single)'])
+
+
+	# create a ggtree plot:
+        #plin4 <- ggtree(tree, layout='rectangular') 
+       	plin4 <- p1
+ 
+	# rename the columns:
         colnames(dat)[4] <- "No. of close relatives"
 
         # use a heatmap to visualize the statistics:
@@ -333,25 +368,55 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
                         'No. of close relatives')],
                 colnames=T, colnames_position="bottom", hjust=0.0,
                 colnames_offset_y=-3,colnames_angle=-45)+
-                scale_fill_continuous(name='Value of\nstatistic',
+                scale_fill_continuous(name='Value of\nstatistic\nat tips\n(standardized)',
                 low='#FEFE62',high='#5D3A9B') +
                 theme(plot.margin=unit(c(1,1,3,1),'cm')) +
                 coord_cartesian(clip = 'off') +
                 ggtitle(title) +
-                theme(plot.title=element_text(hjust=0.5,size=18,face="bold"))
+                theme(plot.title=element_text(hjust=0.5,size=18,face="bold")) + 
+		theme(axis.text=element_text(size=18), 
+			axis.title=element_text(size=18, face='bold')) +
+		theme(legend.text = element_text(size=16), legend.key.size = unit(1.0,'cm'),
+			legend.title=element_text(size=18)) + 
+		guides(color=guide_legend(override.aes=list(linewidth=2)))
+	
+	#reorder the factor levels in crud$state:
+	# If we want to just look at LBI at the tips, we need to just use the first
+	# ntests rows of crud:
+	crud$state <- factor(crud$state, levels=c('IL','IH'))
+
+	p1.box <- ggplot(crud[1:ntests,]) + geom_boxplot(aes(x=state,y=lbi,fill=state)) +
+		scale_fill_manual(name='Host' ,values=c('IL'='gray80','IH'='gray27')) + 
+		theme_classic() + 
+		ylab('LBI (raw)') + 
+		xlab('Host') + 
+		theme(legend.position='none') +
+		theme(axis.text=element_text(size=18), 
+			axis.title=element_text(size=18, face='bold'))
+		
+
+	# make the tree and boxplot figures w/out the title first:
+	alnd <- align_plots(heatfig,p1.box,align='v',axis='lr')
+	fig.p1 <- plot_grid(alnd[[1]],alnd[[2]],ncol=1, rel_heights=c(2,0.5))
 
 
-        return(list(heatfig,dat))
+
+        return(list(fig.p1,dat))
 }
 
 
-fig <- plot_grid(getmainplot(tree3,title='Cross-sectional sampling,\nsuperspreading')[[1]],
-		getmainplot(tree4,title='Longitudinal sampling,\nsuperspreading')[[1]],
+figcross <- plot_grid(getmainplot(tree3,title='Cross-sectional sampling,\nsuperspreading',taulbi=1,tauthd=1)[[1]],
 		getmainplot(tree1,title='Cross-sectional sampling,\nhomogenous infectiousness')[[1]],
-		getmainplot(tree2,title='Longitudinal sampling,\nhomogeneous infectiousness')[[1]],
-		nrow=2)
+		nrow=1)
 
-ggsave(fig, file='figures/nullmodelfigs/nullmodeltrees.png', dpi=600, height=16, width=12)
+figlong <- plot_grid(
+		getmainplot(tree4,title='Longitudinal sampling,\nsuperspreading',taulbi=1,tauthd=1)[[1]],
+		getmainplot(tree2,title='Longitudinal sampling,\nhomogeneous infectiousness')[[1]],
+		nrow=1)
+
+ggsave(figcross, file='figures/nullmodelfigs/nullmodeltrees.png', dpi=600, height=16, width=12)
+
+ggsave(figlong, file='figures/nullmodelfigs/nullmodeltrees_long.png', dpi=600, height=16, width=12)
 
 # Want to visualize the relationship between LBI and superspreader status
 dat1 <- getmainplot(tree1,title='')[[2]]
@@ -381,20 +446,25 @@ dat4$Sim <- 4
 
 boxdat <- rbind(dat3,dat4) 
 
-pdf(file='figures/nullmodelfigs/boxplots.pdf',width=8,height=8)
+# reorder factors in boxdat:
+boxdat$Sim <- factor(boxdat$Sim, levels=c(4,3))
+boxdat$Infectiousness <- factor(boxdat$Infectiousness, levels=c('Low','High'))
+
+
+#pdf(file='figures/nullmodelfigs/boxplots.pdf',width=8,height=8)
 par(mfrow=c(1,1))
-boxplot(LBI~Infectiousness*Sim,boxdat,col=c('blue','blue','darkblue','darkblue'),
+boxplot(LBIraw~Infectiousness*Sim,boxdat,col=c('blue','blue','darkblue','darkblue'),
 	xaxt='n',main='LBI ~ Infectiousness x Sampling scheme',xlab='',
 	ylab='Local Branching Index')
 axis(1, line=2,
 	at = c(1,2,3,4),
 	labels = c(
-		'High\ninfectiousness+\ncross-sectional\nsampling',
-		'Low\ninfectiousness+\ncross-sectional\nsampling',
+		'Low\ninfectiousness+\nlongitudinal\nsampling',
 		'High\ninfectiousness+\nlongitudinal\nsampling',
-		'Low\ninfectiousness+\nlongitudinal\nsampling'),
+		'Low\ninfectiousness+\ncross-sectional\nsampling',
+		'High\ninfectiousness+\ncross-sectional\nsampling'),
 	tick=F, cex=0.3)
-dev.off()
+#dev.off()
 
 #pdf(file='figures/nullmodelfigs/boxplots.pdf',width=9,height=9)
 #par(mfrow=c(1,2))
@@ -422,9 +492,9 @@ lin4tbl <- gettbls(lin4tree)
 
 # make a panel displaying LTT, distribution of LBI, and tbl distribution:
 
-pdf(file='figures/nullmodelfigs/nullmodelstats.pdf',height=15,width=15)
+pdf(file='figures/nullmodelfigs/nullmodelstats.pdf',height=5,width=15)
 
-par(mfrow=c(2,2),mar=c(5,5,4,2))
+par(mfrow=c(1,3),mar=c(5,5,4,2))
 
 # 1. make LTT plots for the trees:
 ltt1 <- ltt.plot.coords(tree1)
@@ -434,88 +504,86 @@ ltt4 <- ltt.plot.coords(tree4)
 
 
 inds = 1:dim(ltt1)[1]
-plot(ltt1[inds,'time'], ltt1[inds,'N'], type = "l",col = "blue",lwd = 1,
+plot(ltt1[inds,'time'], ltt1[inds,'N'], type = "l",col = "#40B0A6",lwd = 1,
 	xlab = "Time",ylab = "No. of lineages",
 	main = "Lineages through time",cex.main=2,cex.axis=2,cex.lab=2,cex=2,
 	ylim=c(0,500))
-lines(lin4ltt[,'time'],lin4ltt[,'N'],lty=1,lwd=4,col='red')
-lines(ltt2[inds,'time'],ltt2[inds,'N'],lty=1,lwd=1,col='darkblue')
-lines(ltt3[inds,'time'],ltt3[inds,'N'],lty=1,lwd=3,col='blue')
-lines(ltt4[inds,'time'],ltt4[inds,'N'],lty=1,lwd=3,col='darkblue')
+lines(lin4ltt[,'time'],lin4ltt[,'N'],lty=1,lwd=4,col='#DC3220')
+#lines(ltt2[inds,'time'],ltt2[inds,'N'],lty=1,lwd=1,col='#E1BE6A')
+lines(ltt3[inds,'time'],ltt3[inds,'N'],lty=1,lwd=3,col='#E1BE6A')
+#lines(ltt4[inds,'time'],ltt4[inds,'N'],lty=1,lwd=3,col='#E1BE6A')
 
-legend('topleft',legend=
-	c('Cross-sectional + homogeneous inf.',
-	'Longitudinal + homogeneous inf.',
-	'Cross-sectional + superspreading',
-	'Longitudinal + superspreading',
-	'Empirical Lineage 4 phylogeny'),
-	lty=c(1,1,1,1,1),
-	lwd=c(1,1,3,3,3),cex=2,col=c('blue','darkblue','blue','darkblue','red'),bty='n')
+legend('left',legend=
+	c('Homogeneous inf.',
+	'Superspreading',
+	'Empirical Lineage 4 phy.'),
+	lty=c(1,1,1),
+	lwd=c(3,3,3),cex=2,col=c('#40B0A6','#E1BE6A','#DC3220'),bty='n')
 
 # 2. Display tbl distributions
 
-plot(density(gettbls(tree1)),lwd=1, xlab='Terminal branch length',
+plot(density(gettbls(tree1)),lwd=3, xlab='Terminal branch length',
 	ylab='Density',main='Terminal Branch Lengths',
 	cex.main=2,cex.axis=2,cex.lab=2,cex=2,lty=1,ylim=c(0,0.4),
-	col='blue',xlim=c(0,60))
-lines(density(gettbls(tree2)),lwd=1, xlab='LBI',ylab='Density',	
-	main='LBI distribution',lty=1,
-	col='darkblue')
+	col='#40B0A6',xlim=c(0,30))
+#lines(density(gettbls(tree2)),lwd=1, xlab='LBI',ylab='Density',	
+#	main='LBI distribution',lty=1,
+#	col='#E1BE6A')
 lines(density(gettbls(tree3)),lwd=3, xlab='LBI',ylab='Density',	
 	main='LBI distribution',lty=1,
-	col='blue')
-lines(density(gettbls(tree4)),lwd=3, xlab='LBI',ylab='Density',	
-	main='LBI distribution',lty=1,
-	col='darkblue')
+	col='#E1BE6A')
+#lines(density(gettbls(tree4)),lwd=3, xlab='LBI',ylab='Density',	
+#	main='LBI distribution',lty=1,
+#	col='#E1BE6A')
 lines(density(gettbls(lin4tree)),lwd=3, xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
-	col='red')
+	col='#DC3220')
 	
 # 3. display LBI distributions:
 
-plot(ecdf(dat2$LBI),xlab='LBI',ylab='Cumulative density',main='Local Branching Index',
+plot(ecdf(dat1$LBIraw),xlab='LBI',ylab='Cumulative density',main='Local Branching Index',
 	cex.main=2,cex.axis=2,cex.lab=2,cex=2,lty=1,ylim=c(0,1.0),xlim=c(0,30),
-	verticals=T, do.points=F, lwd=1, col='darkblue')
-lines(ecdf(dat1$LBI), 
+	verticals=T, do.points=F, lwd=3, col='#40B0A6')
+#lines(ecdf(dat1$LBIraw), 
+#	xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
+#	verticals=T,do.points=F,col='#40B0A6',lwd=1)
+lines(ecdf(dat3$LBIraw), 
 	xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
-	verticals=T,do.points=F,col='blue',lwd=1)
-lines(ecdf(dat3$LBI), 
-	xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
-	verticals=T,do.points=F,col='blue',lwd=3)
-lines(ecdf(dat4$LBI), 
-	xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
-	verticals=T,do.points=F,col='darkblue',lwd=3)
+	verticals=T,do.points=F,col='#E1BE6A',lwd=3)
+#lines(ecdf(dat4$LBIraw), 
+#	xlab='LBI',ylab='Density',main='LBI distribution',lty=1,
+#	verticals=T,do.points=F,col='#E1BE6A',lwd=3)
 lines(ecdf(lin4lbi), 
-	xlab='LBI',ylab='Density',main='LBI distribution',lty=3,col='red',
+	xlab='LBI',ylab='Density',main='LBI distribution',lty=3,col='#DC3220',
 	verticals=T, do.points=F,lwd=3)
 
 
-# 4. Display LBI ~ infectiousness for cross sect'l and long'tdl sampling:
-boxplot(LBI~Infectiousness*Sim,boxdat,col=c('blue','blue','darkblue','darkblue'),
-	xaxt='n',main='LBI ~ Infectiousness x Sampling scheme',xlab='',
-	ylab='Local Branching Index',
-	cex.main=2,cex.axis=2,cex.lab=2)
-legend('topright',col=c('blue','darkblue'),legend=c('Cross-sectional sampling','Longitudinal sampling'),
-	pch=15,cex=2,bty='n')
-axis(1, line=0.25,
-	at = c(1,2,3,4),
-	labels = c(
-		'High',
-		'Low',
-		'High',
-		'Low'),
-	tick=F, cex.axis=2)
-axis(1, line=3.00,
-	at = c(2.5),
-	labels = 'Infectiousness',
-	tick=F, cex.axis=2)
-
+## 4. Display LBI ~ infectiousness for cross sect'l and long'tdl sampling:
+#boxplot(LBI~Infectiousness*Sim,boxdat,col=c('blue','blue','darkblue','darkblue'),
+#	xaxt='n',main='LBI ~ Infectiousness x Sampling scheme',xlab='',
+#	ylab='Local Branching Index',
+#	cex.main=2,cex.axis=2,cex.lab=2)
+#legend('topright',col=c('blue','darkblue'),legend=c('Cross-sectional sampling','Longitudinal sampling'),
+#	pch=15,cex=2,bty='n')
+#axis(1, line=0.25,
+#	at = c(1,2,3,4),
+#	labels = c(
+#		'High',
+#		'Low',
+#		'High',
+#		'Low'),
+#	tick=F, cex.axis=2)
+#axis(1, line=3.00,
+#	at = c(2.5),
+#	labels = 'Infectiousness',
+#	tick=F, cex.axis=2)
+#
 
 dev.off()
 
 ## making figures that have boxplots for LBI~Group, and superspreader status
 ## annotated onto the phylogenies
 
-getinsetfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
+getboxtreefig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
 
 	# want to add in rows for nodes with times and LBIs
 	crud <- data.frame(time = tree$tip.height,
@@ -558,7 +626,7 @@ getinsetfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
 	# plot it!
 	#p1 <- p + geom_tippoint(aes(col=group)) + geom_nodepoint(aes(col=group)) + 
 	#	scale_color_discrete(name='Host subpopulation',
-	#	type=c('#E1BE6A','#40B0A6'))  +
+	#	type=c('gray80','gray27'))  +
 	#	theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
 	#	theme(legend.position='none')	
 	#	#theme(legend.text=element_text(size=18),legend.title=element_text(size=16,face='bold')) +
@@ -566,7 +634,7 @@ getinsetfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
 
 	p1 <- p + aes(col=state) + geom_tree(linewidth=0.60) +
 		scale_color_discrete(name='Host',
-		type=c('#E1BE6A','#40B0A6')) +
+		values=c('IL'='gray80','IH'='gray27')) +
 		theme(legend.position='none') +
 		labs(title=title) + theme(plot.title=element_text(hjust=0.5,face='bold',size=18))
 		#theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
@@ -576,7 +644,7 @@ getinsetfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
 	## make a panel plot
 
 	p1.box <- ggplot(crud) + geom_boxplot(aes(x=state,y=lbi20,fill=state)) +
-		scale_fill_manual(name='Host' ,values=c('#E1BE6A','#40B0A6')) + 
+		scale_fill_manual(name='Host' ,values=c('IL'='gray80','IH'='gray27')) + 
 		theme_classic() + 
 		ylab('LBI') + 
 		xlab('Host') + 
@@ -587,31 +655,11 @@ getinsetfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
 
 	# make the tree and boxplot figures w/out the title first:
 	alnd <- align_plots(p1,p1.box,align='v',axis='lr')
-	fig.p1 <- plot_grid(alnd[[1]],alnd[[2]],ncol=1, rel_heights=c(2,0.5))
+	fig.p1 <- plot_grid(alnd[[1]],alnd[[2]],ncol=1, rel_heights=c(2,0.75))
 
 	# make the LBI boxplots an inset:
 	fig.p1.inset <- ggdraw(p1) +
 		draw_plot(p1.box, 0.05, .6, .2, .35)  
-
-#	# create a common title:
-#	title <- ggdraw() + 
-#	  draw_label(
-#	    title,
-#	    fontface = 'bold',
-#	    x = titleadjust,
-#	    hjust = 0.0,
-#	    size = 18
-#	  ) +
-#	  theme(
-#	    # add margin on the left of the drawing canvas,
-#	    # so title is aligned with left edge of first plot
-#	    plot.margin = margin(0, 0, 0, 7)
-#	  )
-#
-#	# make the tree and boxplot figures w/out the title first:
-#
-#	# add the title:
-#	fig.p1 <- plot_grid(title, fig.p1, ncol=1, rel_heights=c(0.1,1))
 
 	return(fig.p1)
 }
@@ -624,5 +672,57 @@ getinsetfig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
 #
 ## place them in a combined figure:
 #mainfig <- plot_grid(fig.1,fig.2,fig.3,fig.4,byrow=T,nrow=2)
+
+
+
+
+gettauplot <- function(tree,title='add a title!'){
+
+	# want to add in rows for nodes with times and LBIs
+	crud <- data.frame(time = tree$tip.height,
+		label = tree$tip.label)
+
+	# the node labels have the times; extract these:
+	m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
+	crud2 <- data.frame(time=as.numeric(m), 
+			label = names(m))
+	# the node labels are super clunky, but we need to keep them to match with the tree
+	crud <- rbind(crud,crud2)
+
+	# rearrange columns with labels first:
+	crud <- crud[,c(2,1)]
+
+	# calculate LBI for the tips and the nodes for lots of tau values:
+
+	# tau vals for plotting:
+	tauvals <- seq(-4,2, length=30)
+	tauvals <- 10^tauvals
+
+	for(tau in tauvals) crud[,paste0('lbi',tau)] <- lbi(tree, tau=tau)
+
+	# add in a column for the state of the node/tip:
+	crud$state <- NA
+	crud[grep('IH',crud$label[1:ntests]),'state'] <- 'IH'
+	crud[grep('IL',crud$label[1:ntests]),'state'] <- 'IL'
+
+	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]+0))
+
+	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
+
+	ratios <- apply(crud[,paste0('lbi',tauvals)], 2, function(x) mean(x[crud$state=='IH'])/mean(x[crud$state=='IL'])  )
+
+	plot(tauvals, ratios, xlab=bquote(tau),ylab='LBI ratio (IH/IL)',  
+		type='l',lwd=3, ylim=c(0, max(ratios)*1.5),
+		cex.axis=1.5,cex.lab=1.5, main=title)
+}
+
+
+pdf(file='figures/nullmodelfigs/super.pdf',height=6,width=6)
+gettauplot(tree3, title='Superspreading')
+dev.off()
+
+pdf(file='figures/nullmodelfigs/homogeneous.pdf',height=6,width=6)
+gettauplot(tree1, title='Homogeneous infectiousness')
+dev.off()
 
 
