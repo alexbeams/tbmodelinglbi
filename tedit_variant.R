@@ -2,17 +2,12 @@ rm(list=ls())
 
 source("compile_variant_and_superspreading_model.R")
 
-# 2 useful seeds:
-# with Ieq <- 0.01, use 379920
-# with Ieq <- 0.001, use 509262
 
 #############
 #############
 ntests <- 500
 
 # time to simulate:
-#time <- c(tstart,tmax)/365
-
 time <- c(-125,50)
 
 # when should we start to sample?
