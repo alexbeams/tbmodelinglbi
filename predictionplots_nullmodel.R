@@ -14,28 +14,29 @@ getmets <- function(tree){
 	# want to add in rows for nodes with times and LBIs
 	crud <- data.frame(label = tree$tip.label)
 
-	# the node labels have the times; extract these:
-	m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
+	# Let's just try to maximize the difference in LBI across state at the tips, not the nodes (uncomment to change):	
+	## the node labels have the times; extract these:
+	#m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
 
-	crud2 <- data.frame(label = names(m))
+	#crud2 <- data.frame(label = names(m))
 
-	# the node labels are super clunky, but we need to keep them to match with the tree
-	crud <- rbind(crud,crud2)
+	## the node labels are super clunky, but we need to keep them to match with the tree
+	#crud <- rbind(crud,crud2)
 
 	# calculate LBI for the tips and the nodes for several values of bandwidth, tau:
 	taulbis <- 1:10
 
-	for(taulbi in taulbis){crud[,paste0('lbi',taulbi)] <- lbi(tree, tau=taulbi)}
+	for(taulbi in taulbis){crud[,paste0('lbi',taulbi)] <- lbi(tree, tau=taulbi)[1:ntests]}
 
 	# add in a column for the state of the node/tip:
 	crud$state <- NA
 	crud[grep('IH',crud$label[1:ntests]),'state'] <- 'IH'
 	crud[grep('IL',crud$label[1:ntests]),'state'] <- 'IL'
 
-	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], 
-		function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]+0))
-
-	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
+#	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], 
+#		function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]+0))
+#
+#	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
 
 	# Calculate F statistics from analysis of variance for each tau:
 	Fstats <- apply(crud[,paste0('lbi',taulbis)], 2, function(x) summary(aov(x~state,crud))[[1]][['F value']][1])
@@ -85,192 +86,192 @@ getmets <- function(tree){
 ## but which is now saved - so we load the rocdat's below
 ## to construct the plots
 
-## What are the paths for all of the trees we want to load?
-#
-#
-#
-######## 5 years
-########
-#
-## ntests=500, Nyr = 5
-#treedir <- 'sims/nullmodel/500/5yr/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_500_5yr <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_500_5yr,file='sims/nullmodel/rocdat_500_5yr.Rdata')
-#
-## ntests=2000, Nyr = 5
-#treedir <- 'sims/nullmodel/2000/5yr/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_2000_5yr <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_2000_5yr,file='sims/nullmodel/rocdat_2000_5yr.Rdata')
-#
-#
-######## 10 years
-########
-#
-## ntests=500, Nyr = 10
-#treedir <- 'sims/nullmodel/500/10yr/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_500_10yr <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_500_10yr,file='sims/nullmodel/rocdat_500_10yr.Rdata')
-#
-#
-#
-## ntests=2000, Nyr = 10
-#treedir <- 'sims/nullmodel/2000/10yr/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_2000_10yr <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_2000_10yr,file='sims/nullmodel/rocdat_2000_10yr.Rdata')
-#
-#
-#
-######## 15 years
-########
-#
-## ntests=500, Nyr = 15
-#treedir <- 'sims/nullmodel/500/15yr/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_500_15yr <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_500_15yr,file='sims/nullmodel/rocdat_500_15yr.Rdata')
-#
-#
-#
-## ntests=2000, Nyr = 15
-#treedir <- 'sims/nullmodel/2000/15yr/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_2000_15yr <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_2000_15yr,file='sims/nullmodel/rocdat_2000_15yr.Rdata')
-#
-#
-#
-######## 20 years
-########
-#
-## ntests=500, Nyr = 20
-#treedir <- 'sims/nullmodel/500/20yr/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_500_20yr <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_500_20yr,file='sims/nullmodel/rocdat_500_20yr.Rdata')
-#
-#
-#
-## ntests=2000, Nyr = 20
-#treedir <- 'sims/nullmodel/2000/20yr/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_2000_20yr <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_2000_20yr,file='sims/nullmodel/rocdat_2000_20yr.Rdata')
+# What are the paths for all of the trees we want to load?
+
+
+
+####### 5 years
+#######
+
+# ntests=500, Nyr = 5
+treedir <- 'sims/nullmodel/500/5yr/'
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_500_5yr <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_500_5yr,file='sims/nullmodel/rocdat_500_5yr.Rdata')
+
+# ntests=2000, Nyr = 5
+treedir <- 'sims/nullmodel/2000/5yr/'
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_2000_5yr <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_2000_5yr,file='sims/nullmodel/rocdat_2000_5yr.Rdata')
+
+
+####### 10 years
+#######
+
+# ntests=500, Nyr = 10
+treedir <- 'sims/nullmodel/500/10yr/'
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_500_10yr <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_500_10yr,file='sims/nullmodel/rocdat_500_10yr.Rdata')
+
+
+
+# ntests=2000, Nyr = 10
+treedir <- 'sims/nullmodel/2000/10yr/'
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_2000_10yr <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_2000_10yr,file='sims/nullmodel/rocdat_2000_10yr.Rdata')
+
+
+
+####### 15 years
+#######
+
+# ntests=500, Nyr = 15
+treedir <- 'sims/nullmodel/500/15yr/'
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_500_15yr <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_500_15yr,file='sims/nullmodel/rocdat_500_15yr.Rdata')
+
+
+
+# ntests=2000, Nyr = 15
+treedir <- 'sims/nullmodel/2000/15yr/'
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_2000_15yr <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_2000_15yr,file='sims/nullmodel/rocdat_2000_15yr.Rdata')
+
+
+
+####### 20 years
+#######
+
+# ntests=500, Nyr = 20
+treedir <- 'sims/nullmodel/500/20yr/'
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_500_20yr <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_500_20yr,file='sims/nullmodel/rocdat_500_20yr.Rdata')
+
+
+
+# ntests=2000, Nyr = 20
+treedir <- 'sims/nullmodel/2000/20yr/'
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_2000_20yr <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_2000_20yr,file='sims/nullmodel/rocdat_2000_20yr.Rdata')
 
 
 ## We load the rocdat dataframes to create our plots:
@@ -310,7 +311,7 @@ auc_2000_20yr <- with(as.data.frame(rocdat_2000_20yr), getauc(rev(falsepos),rev(
 
 
 
-pdf(file='figures/nullmodel_roc_2.pdf',height=6,width=12)
+pdf(file='figures/roc/nullmodel_roc_2.pdf',height=6,width=12)
 par(mfrow=c(1,2))
 plot(truepos~falsepos,rocdat_500_5yr,type='l',lwd=2,
 	xlab='False-positive rate',
@@ -338,7 +339,7 @@ dev.off()
 
 # try plotting by duration:
 
-pdf(file='figures/nullmodel_roc.pdf',height=10,width=10)
+pdf(file='figures/roc/nullmodel_roc.pdf',height=10,width=10)
 par(mfrow=c(2,2))
 
 plot(truepos~falsepos,rocdat_500_5yr,type='l',lwd=2,
