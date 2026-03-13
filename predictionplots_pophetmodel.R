@@ -198,6 +198,29 @@ for(treenm in treenms){
 rocdat_case2_theta2 <- apply(simplify2array(metlist),1:2,mean)
 save(rocdat_case2_theta2,file='sims/pophetmodel/roc/rocdat_case2_theta2.Rdata')
 
+####### Case 2, theta3: groups in population equal, preferential mixing:
+#######
+
+treedir <- 'sims/pophetmodel/case2/theta3/'
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_case2_theta3 <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_case2_theta3,file='sims/pophetmodel/roc/rocdat_case2_theta3.Rdata')
+
+
 
 
 ### We load the rocdat dataframes to create our plots:
@@ -206,6 +229,8 @@ load('sims/pophetmodel/roc/rocdat_case1_theta1.Rdata')
 load('sims/pophetmodel/roc/rocdat_case1_theta2.Rdata')
 load('sims/pophetmodel/roc/rocdat_case2_theta1.Rdata')
 load('sims/pophetmodel/roc/rocdat_case2_theta2.Rdata')
+load('sims/pophetmodel/roc/rocdat_case2_theta3.Rdata')
+
 
 
 # We need to calculate AUC from each rocdat by quadrature:
@@ -223,6 +248,8 @@ auc_case1_theta1 <- with(as.data.frame(rocdat_case1_theta1), getauc(rev(falsepos
 auc_case1_theta2 <- with(as.data.frame(rocdat_case1_theta2), getauc(rev(falsepos),rev(truepos)) )
 auc_case2_theta1 <- with(as.data.frame(rocdat_case2_theta1), getauc(rev(falsepos),rev(truepos)) )
 auc_case2_theta2 <- with(as.data.frame(rocdat_case2_theta2), getauc(rev(falsepos),rev(truepos)) )
+auc_case2_theta3 <- with(as.data.frame(rocdat_case2_theta3), getauc(rev(falsepos),rev(truepos)) )
+
 
 
 
@@ -425,6 +452,19 @@ fig_case2 <- plot_grid(p21,p22,nrow=1)
 
 ggsave(fig_case1, file='figures/pophetmodelfigs/fig_case1.png',height=14,width=18)
 ggsave(fig_case2, file='figures/pophetmodelfigs/fig_case2.png',height=14,width=18)
+
+
+## Plot some of the case2, theta3 trees (no superspreading)
+# Pick a good example from case 2, theta2:
+treedir <- 'sims/pophetmodel/case2/theta3/'
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+treelist <- list()
+
+for(treenm in treenms){
+	treelist[[treenm]] <- read.tree(treenm)
+}
 
 
 

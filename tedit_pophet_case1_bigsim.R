@@ -134,7 +134,7 @@ getsimtree <- function(tms,output){
 }
 
 
-# 1. No preferential mixing, heightened susceptibility for Group 2 (they are 90% of all infs):
+# 1. No preferential mixing, heightened susceptibility for Group 2 (they are 80% of all infs):
 theta1 <- gettheta(y=0.8,w=1,pH=0.1,fH=0.9)
 
 # 2. Strong preferential mixing, "...":

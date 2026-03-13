@@ -127,30 +127,91 @@ getsimtree <- function(tms,output){
 # 1. No preferential mixing, different levels of heightened susceptibility for Group 2:
 theta1 <- gettheta(f=0.2,w=1,pH=0.1,fH=0.9)
 
-# 2. No preferential mixing, different levels of heightened susceptibility for Group 2:
+# 2. Strong preferential mixing, different levels of heightened susceptibility for Group 2:
 theta2 <- gettheta(f=0.2,w=.1,pH=0.1,fH=0.9)
+
+# 3. Repeat #2 but with superspreading turned off
+theta3 <- gettheta(f=0.2,w=.1,pH=0.1,fH=0.1)
+
 
 
 # Make sure these initial conditions match the values we use for Group2 and Group 1:
 initialStates <- c(Npop * 0.8,0,0,0,Npop * 0.2,0,1,0)
 names(initialStates) <- c('S1','L1','IH1','IL1','S2','L2','IH2','IL2') 
+#
+## Folder to save outputs:
+#case <- 'case2/'
+#
+## First, simulate using theta1 (homogeneous mixing):
+#numouts <- 30
+#siminds <- 1:numouts
+#
+## sub-folder to save outputs:
+#thetafolder <- 'theta1/'
+#
+#for(outind in siminds){
+# outpath <- paste0('sims/pophetmodel/case2/theta1/',outind,'.txt')
+#
+# # Run the sim, save the seed!
+# out <-  sir_simu(
+#    paramValues = as.list(theta1),
+#    initialStates = initialStates,
+#    tau = .0001,
+#    times = time,
+#    method = "mixed",
+#    verbose = TRUE,
+#    nTrials = 100)
+# # Save the seed:
+# writeLines(as.character(out$seed), paste0('sims/pophetmodel/case2/theta1/seed',outind,'.txt'))
+#
+# # Simulate a tree :
+# source('tedit_pophet_casex_bigsim_gettrees.R')
+#} 
+#
+#
+## Second, simulate using theta2 (preferential mixing):
+#numouts <- 30
+#siminds <- 1:numouts
+#
+## sub-folder to save outputs:
+#thetafolder <- 'theta2/'
+#
+#
+#for(outind in siminds){
+# outpath <- paste0('sims/pophetmodel/case2/theta2/',outind,'.txt')
+#
+# # Run the sim, save the seed!
+# out <-  sir_simu(
+#    paramValues = as.list(theta2),
+#    initialStates = initialStates,
+#    tau = .0001,
+#    times = time,
+#    method = "mixed",
+#    verbose = TRUE,
+#    nTrials = 100)
+# # Save the seed:
+# writeLines(as.character(out$seed), paste0('sims/pophetmodel/case2/theta2/seed',outind,'.txt'))
+#
+# # Simulate a tree :
+# source('tedit_pophet_casex_bigsim_gettrees.R')
+#} 
+#
 
-# Folder to save outputs:
+# Third, simulate using theta3 (preferential mixing but no superspreading):
+numouts <- 30
+siminds <- 1:numouts
+
+# sub-folder to save outputs:
+thetafolder <- 'theta3/'
 case <- 'case2/'
 
-# First, simulate using theta1 (homogeneous mixing):
-numouts <- 30
-siminds <- 1:numouts
-
-# sub-folder to save outputs:
-thetafolder <- 'theta1/'
 
 for(outind in siminds){
- outpath <- paste0('sims/pophetmodel/case2/theta1/',outind,'.txt')
+ outpath <- paste0('sims/pophetmodel/case2/theta3/',outind,'.txt')
 
  # Run the sim, save the seed!
  out <-  sir_simu(
-    paramValues = as.list(theta1),
+    paramValues = as.list(theta3),
     initialStates = initialStates,
     tau = .0001,
     times = time,
@@ -158,35 +219,7 @@ for(outind in siminds){
     verbose = TRUE,
     nTrials = 100)
  # Save the seed:
- writeLines(as.character(out$seed), paste0('sims/pophetmodel/case2/theta1/seed',outind,'.txt'))
-
- # Simulate a tree :
- source('tedit_pophet_casex_bigsim_gettrees.R')
-} 
-
-
-# Second, simulate using theta2 (preferential mixing):
-numouts <- 30
-siminds <- 1:numouts
-
-# sub-folder to save outputs:
-thetafolder <- 'theta2/'
-
-
-for(outind in siminds){
- outpath <- paste0('sims/pophetmodel/case2/theta2/',outind,'.txt')
-
- # Run the sim, save the seed!
- out <-  sir_simu(
-    paramValues = as.list(theta2),
-    initialStates = initialStates,
-    tau = .0001,
-    times = time,
-    method = "mixed",
-    verbose = TRUE,
-    nTrials = 100)
- # Save the seed:
- writeLines(as.character(out$seed), paste0('sims/pophetmodel/case2/theta2/seed',outind,'.txt'))
+ writeLines(as.character(out$seed), paste0('sims/pophetmodel/case2/theta3/seed',outind,'.txt'))
 
  # Simulate a tree :
  source('tedit_pophet_casex_bigsim_gettrees.R')
