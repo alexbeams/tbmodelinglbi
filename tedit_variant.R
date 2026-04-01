@@ -1052,31 +1052,38 @@ source('lbi.R')
 
 # Make a figure with the same basic format as the null model figures, but with just LBI in the heatmap:
 
-getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title'){
 
+getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title'){
+	ntests <- Ntip(tree)
 	# want to add in rows for nodes with times and LBIs
-	crud <- data.frame(time = tree$tip.height,
-		label = tree$tip.label)
+	#crud <- data.frame(time = tree$tip.height,
+	#	label = tree$tip.label)
+	crud <- data.frame(label = tree$tip.label)
 
 	# the node labels have the times; extract these:
-	m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
-	crud2 <- data.frame(time=as.numeric(m), 
-			label = names(m))
+	#m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
+	m<- sapply(tree$node.label, function(z) substr(z, regexpr('string=',z)[1]+10, regexpr('string=',z)[1]+11 ) ) 
+
+
+	#crud2 <- data.frame(time=as.numeric(m), 
+	#		label = names(m))
+	
+	crud2 <- data.frame(label = names(m))
 	# the node labels are super clunky, but we need to keep them to match with the tree
 	crud <- rbind(crud,crud2)
 
 	# rearrange columns with labels first:
-	crud <- crud[,c(2,1)]
+	#crud <- crud[,c(2,1)]
 
 	# calculate LBI for the tips and the nodes:
 	crud$lbi <- lbi(tree, tau=taulbi)
 
 	# add in a column for the state of the node/tip:
 	crud$state <- NA
-	crud[grep('IH',crud$label[1:ntests]),'state'] <- 'I'
-	crud[grep('IL',crud$label[1:ntests]),'state'] <- 'I'
-	crud[grep('JH',crud$label[1:ntests]),'state'] <- 'J'
-	crud[grep('JL',crud$label[1:ntests]),'state'] <- 'J'
+	crud[grep('IH',crud$label[1:ntests]),'state'] <- '1'
+	crud[grep('IL',crud$label[1:ntests]),'state'] <- '1'
+	crud[grep('JH',crud$label[1:ntests]),'state'] <- '2'
+	crud[grep('JL',crud$label[1:ntests]),'state'] <- '2'
 
 
 	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]-1))
@@ -1084,10 +1091,7 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 
 	p <- ggtree(tree,layout='rectangular') %<+% crud
 
-	p1 <- p + aes(col=state) + geom_tree(linewidth=0.60) +
-		scale_color_manual(name='Host',
-		values=c('I'='#1A85FF','J'='#D41159')) +
-		theme(legend.position='none') +
+	p1 <- p + geom_tree(linewidth=0.60) +
 		labs(title=title) + theme(plot.title=element_text(hjust=0.5,face='bold',size=18))
 		#theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
 		#theme(legend.text=element_text(size=18),legend.title=element_text(size=16,face='bold')) +
@@ -1122,6 +1126,23 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 
 	# create a ggtree plot:
        	plin4 <- p1
+
+	# Create a heatmap for subtype status
+
+	statedat <- as.data.frame(crud[,'state'])
+	rownames(statedat) <- crud$label
+	colnames(statedat) <- 'Subtype'
+
+	discretefigvar <- gheatmap(plin4, statedat, offset=0, width=0.1, colnames_angle=-45,
+			colnames_offset_y = -10, hjust=0.5, font.size=4,
+			colnames_position='bottom', color=NA) + 
+			scale_fill_discrete(name='Subtype', breaks = c('1','2'),
+				type=c('#1A85FF','#D41159')) +
+			theme(panel.spacing = unit(0,'pt'),legend.title =element_text(size=18),
+				legend.text=element_text(size=18)) 
+
+	discretefigvar2 <- discretefigvar + new_scale_fill()
+
  
 
 	lbidat <- as.data.frame(dat[,'LBIraw'])
@@ -1129,9 +1150,10 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 	colnames(lbidat) <- 'LBI'
 
         # use a heatmap to visualize the statistics:
-        heatfig <-  gheatmap(plin4,lbidat,
+        heatfig <-  gheatmap(discretefigvar2,lbidat,
                 colnames=T, colnames_position="bottom", hjust=0.0,
-                colnames_offset_y=-3,colnames_angle=-45,width=0.1)+
+                colnames_offset_y=-3,colnames_angle=-45,width=0.1,
+		offset=20)+
                 scale_fill_continuous(name='Value of\nLBI\nat tips\n(raw)',
                 low='#FEFE62',high='#5D3A9B') +
                 theme(plot.margin=unit(c(1,1,3,1),'cm')) +
@@ -1142,18 +1164,23 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 			axis.title=element_text(size=18, face='bold')) +
 		theme(legend.text = element_text(size=16), legend.key.size = unit(1.0,'cm'),
 			legend.title=element_text(size=18)) + 
-		guides(color=guide_legend(override.aes=list(linewidth=2)))
+		#guides(color=guide_legend(override.aes=list(linewidth=2)))
+		guides(
+		 color=guide_legend(order = 1, override.aes=list(linewidth=2)),
+		 fill = guide_colorbar(order=2)
+		)
+	
 	
 	#reorder the factor levels in crud$state:
 	# If we want to just look at LBI at the tips, we need to just use the first
 	# ntests rows of crud:
-	crud$state <- factor(crud$state, levels=c('I','J'))
+	crud$state <- factor(crud$state, levels=c('1','2'))
 
 	p1.box <- ggplot(crud[1:ntests,]) + geom_boxplot(aes(x=state,y=lbi,fill=state)) +
-		scale_fill_manual(name='Host' ,values=c('I'='#1A85FF','J'='#D41159')) + 
+		scale_fill_manual(name='Subtype' ,values=c('1'='#1A85FF','2'='#D41159')) + 
 		theme_classic() + 
 		ylab('LBI (raw)') + 
-		xlab('Host') + 
+		xlab('Subtype') + 
 		theme(legend.position='none') +
 		theme(axis.text=element_text(size=18), 
 			axis.title=element_text(size=18, face='bold'))
@@ -1190,20 +1217,22 @@ getmainplotlong <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='t
 
 	# add in a column for the state of the node/tip:
 	crud$state <- NA
-	crud[grep('IH',crud$label[1:ntests]),'state'] <- 'I'
-	crud[grep('IL',crud$label[1:ntests]),'state'] <- 'I'
-	crud[grep('JH',crud$label[1:ntests]),'state'] <- 'J'
-	crud[grep('JL',crud$label[1:ntests]),'state'] <- 'J'
+	crud[grep('IH',crud$label[1:ntests]),'state'] <- '1'
+	crud[grep('IL',crud$label[1:ntests]),'state'] <- '1'
+	crud[grep('JH',crud$label[1:ntests]),'state'] <- '2'
+	crud[grep('JL',crud$label[1:ntests]),'state'] <- '2'
 
 
 	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]-1))
+	nodenms[nodenms=='I'] <- 1
+	nodenms[nodenms=='J'] <- 2
 	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
 
 	p <- ggtree(tree,layout='rectangular') %<+% crud
 
 	p1 <- p + aes(col=state) + geom_tree(linewidth=0.60) +
-		scale_color_manual(name='Host',
-		values=c('I'='#1A85FF','J'='#D41159')) +
+		scale_color_manual(name='Subtype',
+		values=c('1'='#1A85FF','2'='#D41159')) +
 		theme(legend.position='none') +
 		labs(title=title) + theme(plot.title=element_text(hjust=0.5,face='bold',size=18))
 		#theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
@@ -1264,10 +1293,10 @@ getmainplotlong <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='t
 	#reorder the factor levels in crud$state:
 	# If we want to just look at LBI at the tips, we need to just use the first
 	# ntests rows of crud:
-	crud$state <- factor(crud$state, levels=c('I','J'))
+	crud$state <- factor(crud$state, levels=c('1','2'))
 
 	p1.points <- ggplot(crud[1:ntests,]) + geom_point(aes(x=time,y=lbi,color=state)) +
-		scale_color_manual(name='Host' ,values=c('I'='#1A85FF','J'='#D41159')) + 
+		scale_color_manual(name='Subtype' ,values=c('1'='#1A85FF','2'='#D41159')) + 
 		theme_classic() + 
 		ylab('LBI (raw)') + 
 		xlab('Time') + 
@@ -1295,7 +1324,7 @@ figcross <- plot_grid(fig.10[[1]],fig.50[[1]],fig.90[[1]], nrow=1)
 ggsave(figcross, file='figures/varmodelfigs/varmodeltrees.png', dpi=600, height=16, width=24)
 
 fig.long <- getmainplotlong(tree.long, title='Longitudinal observations', taulbi=20)[[1]]
-ggsave(fig.long, file='figures/varmodelfigs/varmodeltrees_long.png', dpi=600, height=16, width=24)
+ggsave(fig.long, file='figures/varmodelfigs/varmodeltrees_long.png', dpi=300, height=8, width=12)
 
 
 
@@ -1318,26 +1347,27 @@ gettauplot <- function(tree,title='add a title!'){
 	# calculate LBI for the tips and the nodes for lots of tau values:
 
 	# tau vals for plotting:
-	tauvals <- seq(-4,2, length=30)
+	tauvals <- seq(0,2, length=30)
 	tauvals <- 10^tauvals
 
 	for(tau in tauvals) crud[,paste0('lbi',tau)] <- lbi(tree, tau=tau)
 
 	# add in a column for the state of the node/tip:
 	crud$state <- NA
-	crud[grep('IH',crud$label[1:ntests]),'state'] <- 'I'
-	crud[grep('IL',crud$label[1:ntests]),'state'] <- 'I'
-	crud[grep('JH',crud$label[1:ntests]),'state'] <- 'J'
-	crud[grep('JL',crud$label[1:ntests]),'state'] <- 'J'
+	crud[grep('IH',crud$label[1:ntests]),'state'] <- '1'
+	crud[grep('IL',crud$label[1:ntests]),'state'] <- '1'
+	crud[grep('JH',crud$label[1:ntests]),'state'] <- '2'
+	crud[grep('JL',crud$label[1:ntests]),'state'] <- '2'
 
 
 	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]+0))
 
 	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
 
-	ratios <- apply(crud[,paste0('lbi',tauvals)], 2, function(x) mean(x[crud$state=='J'])/mean(x[crud$state=='I'])  )
+	#ratios <- apply(crud[,paste0('lbi',tauvals)], 2, function(x) mean(x[crud$state=='2'])/mean(x[crud$state=='1'])  )
+        ratios <- apply(crud[,paste0('lbi',tauvals)], 2, function(x) summary(aov(x~state,crud))[[1]][["F value"]][1]  )
 
-	plot(tauvals, ratios, xlab=bquote(tau),ylab='LBI ratio (J/I)',  
+	plot(tauvals, ratios, xlab=bquote(tau),ylab='F-statistic',  
 		type='l',lwd=3, ylim=c(0, max(ratios)*1.5),
 		cex.axis=1.3,cex.lab=1.3, main=title)
 }
@@ -1352,6 +1382,13 @@ gettauplot(tree.50, title='Variant @ 50%')
 dev.off()
 
 pdf(file='figures/varmodelfigs/var90.pdf',height=6,width=6)
+gettauplot(tree.90, title='Variant @ 90%')
+dev.off()
+
+pdf(file='figures/varmodelfigs/s6tauplots.pdf',height=6,width=15)
+par(mfrow=c(1,3))
+gettauplot(tree.10, title='Variant @ 10%')
+gettauplot(tree.50, title='Variant @ 50%')
 gettauplot(tree.90, title='Variant @ 90%')
 dev.off()
 

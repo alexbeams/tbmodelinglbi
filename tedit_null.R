@@ -224,7 +224,7 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 
 	p <- ggtree(tree,layout='rectangular') %<+% crud
 
-	p1 <- p + aes(col=state) + geom_tree(linewidth=0.60) +
+	p1 <- p + geom_tree(linewidth=0.60) +
 		scale_color_manual(name='Host',
 		values=c('IL'='gray80','IH'='gray27')) +
 		theme(legend.position='none') +
@@ -298,7 +298,7 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 	colnames(statedat) <- 'Host'
 
 	discretefigvar <- gheatmap(plin4, statedat, offset=0, width=0.2, colnames_angle=-45,
-			colnames_offset_y = -30, hjust=0.5, font.size=4,
+			colnames_offset_y = -3, hjust=0.5, font.size=4,
 			colnames_position='bottom', color=NA) + 
 			scale_fill_discrete(name='Host',breaks=c('IH','IL'),
 				type=c('gray27','gray80'))  + 

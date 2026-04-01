@@ -1,5 +1,6 @@
 getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title'){
 
+	ntests <- Ntip(tree)
 	# want to add in rows for nodes with times and LBIs
 	#crud <- data.frame(time = tree$tip.height,
 	#	label = tree$tip.label)
@@ -42,9 +43,7 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 
 	p <- ggtree(tree,layout='rectangular') %<+% crud
 
-	p1 <- p + aes(col=state) + geom_tree(linewidth=0.60) +
-		scale_color_manual(name='Host',
-		values=c('Group 1'='#E1BE6A','Group 2'='#40B0A6')) +
+	p1 <- p + geom_tree(linewidth=0.60) +
 		theme(legend.position='none') +
 		labs(title=title) + theme(plot.title=element_text(hjust=0.5,face='bold',size=18))
 		#theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
@@ -80,16 +79,33 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 
 	# create a ggtree plot:
        	plin4 <- p1
- 
+
+	# Create a heatmap for host type
+
+	statedat <- as.data.frame(crud[,'state'])
+	rownames(statedat) <- crud$label
+	colnames(statedat) <- 'Host'
+
+	discretefigvar <- gheatmap(plin4, statedat, offset=-5, width=0.1, colnames_angle=-45,
+			colnames_offset_y = -10, hjust=0.5, font.size=4,
+			colnames_position='bottom', color=NA) + 
+			scale_fill_discrete(name='Host', breaks = c('Group 1','Group 2'),
+				type=c('#E1BE6A','#40B0A6')) +
+			theme(panel.spacing = unit(0,'pt'),legend.title =element_text(size=18),
+				legend.text=element_text(size=18)) 
+
+	discretefigvar2 <- discretefigvar + new_scale_fill()
+
 
 	lbidat <- as.data.frame(dat[,'LBIraw'])
 	rownames(lbidat) <- rownames(dat)
 	colnames(lbidat) <- 'LBI'
 
         # use a heatmap to visualize the statistics:
-        heatfig <-  gheatmap(plin4,lbidat,
+        heatfig <-  gheatmap(discretefigvar2,lbidat,
                 colnames=T, colnames_position="bottom", hjust=0.0,
-                colnames_offset_y=-3,colnames_angle=-45,width=0.1)+
+                colnames_offset_y=-3,colnames_angle=-45,width=0.1,
+		offset = 20)+
                 scale_fill_continuous(name='Value of\nLBI\nat tips\n(raw)',
                 low='#FEFE62',high='#5D3A9B') +
                 theme(plot.margin=unit(c(1,1,3,1),'cm')) +

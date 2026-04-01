@@ -582,7 +582,7 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 
 	p <- ggtree(tree,layout='rectangular') %<+% crud
 
-	p1 <- p + aes(col=state) + geom_tree(linewidth=0.60) +
+	p1 <- p + geom_nodepoint(aes(col=state)) + geom_tree(linewidth=0.60) +
 		scale_color_manual(name='Host',
 		values=c('Group 1'='#E1BE6A','Group 2'='#40B0A6')) +
 		theme(legend.position='none') +
