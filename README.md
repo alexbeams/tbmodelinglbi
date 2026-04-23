@@ -2,13 +2,16 @@ This repostory contains all of the codes used to produce simulations in the manu
 
 We are not making the Malawi publicly available at this time to protect individuals' privacy.
 
-All of the codes are run in R. You will need the following packages:
+All of the codes are run in R. You will need the following packages and their dependencies:
 
 ```{r}
-install.packages('TiPS')
-install.packages('ggplot2')
-install.packages('ggtree')
-
+install.packages(TiPS)
+install.packages(ape)
+install.packages(ggplot2)
+install.packages(ggtree)
+install.packages(cowplot)
+install.packages(tidyr)
+install.packages(dplyr)
 ```
 
 Here is how to reproduce the rest of the figures in the manuscript:
