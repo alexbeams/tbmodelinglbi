@@ -2,7 +2,7 @@ This repostory contains all of the codes used to produce simulations in the manu
 
 We are not making the Malawi publicly available at this time to protect individuals' privacy.
 
-All of the codes are run in R. You will need the following packages and their dependencies:
+All of the code is run in R. You will need the following packages and their dependencies:
 
 ```{r}
 install.packages(TiPS)
