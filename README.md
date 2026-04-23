@@ -14,6 +14,8 @@ install.packages(tidyr)
 install.packages(dplyr)
 ```
 
+The most important package in the list is TiPS. It provides a way to specify a compartmental model, simulate it using Gillespie/tau leaping, and then use the realized events to simulate phylogenetic trees of sampled infections using a coalescent approach. You can find a tutorial [here]{https://cran.r-project.org/web/packages/TiPS/vignettes/TiPS.html} and read about the method in their [Methods in Ecology and Evolution]{https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.14038}
+
 Here is how to reproduce the rest of the figures in the manuscript:
 
 Fig 3, Fig S3, Fig S4 - run nullmodel.R. This is a smaller version of the code used to produce Fig4.
