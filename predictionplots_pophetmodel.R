@@ -415,7 +415,7 @@ load("sims/pophetmodel/roc/rocdat_contact_case2_theta2.Rdata")
 #
 #
 ## Save plot:
-#pdf(file='figures/roc/pophetmodel_roc.pdf',height=7,width=14)
+#pdf(file='figures/roc/Fig6_roc.pdf',height=7,width=14)
 #par(mfrow=c(1,2))
 #plot(truepos~falsepos,rocdat_case1_theta1,type='l',lwd=2,
 #	xlab='False-positive rate',
@@ -622,8 +622,8 @@ p22 <- getmainplot(tree_case2_theta2, taulbi=tauopt_case2_theta2,
 fig_case1 <- plot_grid(p11,p12,nrow=1)
 fig_case2 <- plot_grid(p21,p22,nrow=1)
 
-ggsave(fig_case1, file='figures/pophetmodelfigs/fig_case1.png',height=14,width=18)
-ggsave(fig_case2, file='figures/pophetmodelfigs/fig_case2.png',height=14,width=18)
+ggsave(fig_case1, file='figures/pophetmodelfigs/Fig6_case1.png',height=14,width=18)
+ggsave(fig_case2, file='figures/pophetmodelfigs/Fig6_case2.png',height=14,width=18)
 
 # Show the example in Fig S8 that shows you can have a negative or positive correlation w/LBI in Case 2 theta 2(
 #	(assortative mixing turned on)
@@ -641,7 +641,7 @@ p2 <- getmainplot(treelist[[24]], taulbi=33,
 
 fig_ex <- plot_grid(p1,p2,nrow=1)
 
-ggsave(fig_ex, file='figures/pophetmodelfigs/case2example.png',height=14,width=18)
+ggsave(fig_ex, file='figures/pophetmodelfigs/FigS7.png',height=14,width=18)
 
 ### Plot some of the case2, theta3 trees (no superspreading)
 ## Pick a good example from case 2, theta2:
@@ -657,7 +657,7 @@ ggsave(fig_ex, file='figures/pophetmodelfigs/case2example.png',height=14,width=1
 #
 
 ## Show the ROC plot for Case 2 with elevated infectiousness: 
-#pdf(file='figures/roc/pophetmodel_infectiousness_roc.pdf',height=7,width=7)
+#pdf(file='figures/roc/FigS8_roc.pdf',height=7,width=7)
 #par(mfrow=c(1,1))
 #plot(truepos~falsepos,rocdat_infectiousness_case2_theta1,type='l',lwd=2,
 #	xlab='False-positive rate',
@@ -692,7 +692,7 @@ pinf2 <- getmainplot(tree2, taulbi=tau2,
 
 fig_inf <- plot_grid(pinf1,pinf2,nrow=1)
 
-ggsave(fig_inf, file='figures/pophetmodelfigs/fig_inf.png',height=14,width=18)
+ggsave(fig_inf, file='figures/pophetmodelfigs/FigS8_trees.png',height=14,width=18)
 
 
 ## Show the ROC plot for Case 2 with elevated susceptibility: 

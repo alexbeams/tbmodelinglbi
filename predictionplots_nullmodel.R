@@ -1,3 +1,6 @@
+# This code produces Figure 4.
+
+
 # See how well Local Branching Index classifies superspreaders
 require(ape)
 
