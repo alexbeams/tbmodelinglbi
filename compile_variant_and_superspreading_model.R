@@ -10,7 +10,6 @@ require(ggtree)
 require(cowplot)
 require(tidyr)
 require(dplyr)
-require(parallel)
 
 
 # model with a variant and superspreaders:
