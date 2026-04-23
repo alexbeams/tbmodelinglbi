@@ -2,10 +2,18 @@ This repostory contains all of the codes used to produce simulations in the manu
 
 We are not making the Malawi publicly available at this time to protect individuals' privacy.
 
+All of the codes are run in R. You will need the following packages:
+
+```{r}
+install.packages('TiPS')
+install.packages('ggplot2')
+install.packages('ggtree')
+
+```
+
 Here is how to reproduce the rest of the figures in the manuscript:
 
-
-Fig 3, Fig S3, Fig S4 - nullmodel.R
+Fig 3, Fig S3, Fig S4 - run nullmodel.R. This is a smaller version of the code used to produce Fig4.
 
 Fig 4 - run nullmodel_bigsim.R (which calls nullmodel_bigsim_gettrees.R) to simulate all of the trees, then run predictionplots_nullmodel.R to produce ROC plots
 
