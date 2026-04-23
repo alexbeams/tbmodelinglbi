@@ -1,4 +1,4 @@
-This repostory contains all of the codes used to produce simulations in the manuscript "Identifying host factors and lineage-specific fitness effects in \textit{Mycobacterium tuberculosis} phylogenies using phylogenetic branching statistics".
+This repostory contains all of the codes used to produce simulations in the manuscript "Identifying host factors and lineage-specific fitness effects in *Mycobacterium tuberculosis* phylogenies using phylogenetic branching statistics".
 
 We are not making the Malawi publicly available at this time to protect individuals' privacy.
 
