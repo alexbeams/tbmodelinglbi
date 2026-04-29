@@ -1,8 +1,5 @@
 rm(list=ls())
 
-# install the latest version of the fork:
-#install_github("https://github.com/Lars-B/TiPS-fork")
-
 require(TiPS)
 require(ape)
 require(ggplot2)
