@@ -1,6 +1,6 @@
 This repostory contains all of the codes used to produce simulations in the manuscript "Identifying host factors and lineage-specific fitness effects in *Mycobacterium tuberculosis* phylogenies using phylogenetic branching statistics".
 
-We are not making the Malawi publicly available at this time to protect individuals' privacy, so this repository does not contain code to reproduce Figures 2, S1, or S2. (Figure 1 is a diagram of the models.)
+We are not able to make the Malawi publicly available to protect individuals' privacy, so this repository does not contain code to reproduce Figures 2, S1, or S2. (Figure 1 is a diagram of the models.)
 
 All of the code is run in R. You will need the following packages and their dependencies:
 
