@@ -69,19 +69,19 @@ if(max(traj$p) > 0.6){
 
 	# Simulate trees with sampling once variant reaches proportion p:
 	tree.10 <- getsimtree.p(tms.10,out,0.10)
-	write.tree(tree.10, file= paste0('sims/varmodel/10/tree',outind,'.nwk'))
+	write.tree(tree.10, file= paste0('sims/varmodel/',seldir,'/10/tree',outind,'.nwk'))
 
 	tree.20 <- getsimtree.p(tms.20,out,0.20)
-	write.tree(tree.20, file= paste0('sims/varmodel/20/tree',outind,'.nwk'))
+	write.tree(tree.20, file= paste0('sims/varmodel/',seldir,'/20/tree',outind,'.nwk'))
 
 	tree.30 <- getsimtree.p(tms.30,out,0.30)
-	write.tree(tree.30, file= paste0('sims/varmodel/30/tree',outind,'.nwk'))
+	write.tree(tree.30, file= paste0('sims/varmodel/',seldir,'/30/tree',outind,'.nwk'))
 
 	tree.40 <- getsimtree.p(tms.40,out,0.40)
-	write.tree(tree.40, file= paste0('sims/varmodel/40/tree',outind,'.nwk'))
+	write.tree(tree.40, file= paste0('sims/varmodel/',seldir,'/40/tree',outind,'.nwk'))
 
 	tree.50 <- getsimtree.p(tms.50,out,0.50)
-	write.tree(tree.50, file= paste0('sims/varmodel/50/tree',outind,'.nwk'))
+	write.tree(tree.50, file= paste0('sims/varmodel/',seldir,'/50/tree',outind,'.nwk'))
 
 }
 

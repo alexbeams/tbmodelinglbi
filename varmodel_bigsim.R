@@ -2,6 +2,9 @@ rm(list=ls())
 
 source("compile_variant_and_superspreading_model.R")
 
+# selective advantage of new variant (match these up):
+deltabeta <- 0.20
+seldir <- 20
 
 #############
 #############
@@ -60,8 +63,8 @@ thetaH <- f/pH
 
 
 # increased infectiousness of variant:
-deltathetaL <- 0.25 * thetaL
-deltathetaH <- 0.25 * thetaH
+deltathetaL <- deltabeta * thetaL
+deltathetaH <- deltabeta * thetaH
 
 
 # probability that latent infection mutates into variant strain:
@@ -127,9 +130,7 @@ numouts <- 30
 # under a different random seed until we get 30 simulations 
 
 #siminds <- 1:numouts
-#siminds <- c(1,4,7,11,12,17,18,19,21,22,23,25,26,27)
-#siminds <- c(1,4,7,11,12,18,22,23,26,27)
-siminds <- 12
+siminds <-  c(14)
 
 for(outind in siminds){
  outpath <- paste0('sims/varmodel/out',outind,'.txt')
@@ -146,7 +147,7 @@ for(outind in siminds){
     nTrials = 100
     )
  #Save the seed:
- writeLines(as.character(out$seed), paste0('sims/varmodel/seed',outind,'.txt'))
+ writeLines(as.character(out$seed), paste0('sims/varmodel/',seldir,'/seed',outind,'.txt'))
 
  # Simulate trees for different variant frequencies from 10% -- 50%.
  source('varmodel_bigsim_gettrees.R')

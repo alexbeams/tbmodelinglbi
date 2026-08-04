@@ -4,6 +4,11 @@
 
  
 require(ape)
+require(ggtree)
+require(ggplot2)
+require(lubridate)
+require(ggnewscale)
+require(cowplot)
 
 source('lbi.R')
 
@@ -97,15 +102,17 @@ getmets <- function(tree){
 ## false positives, true positives, etc. from the trees 
 ## but which is now saved - so we load the rocdat's below
 ## to construct the plots
-#
-## What are the paths for all of the trees we want to load?
-#
-#
+
+# Which selection coefficient to use?
+seladv <- 10
+
+# What are the paths for all of the trees we want to load?
+
 #
 ######## 10%
 ########
 #
-#treedir <- 'sims/varmodel/10/'
+#treedir <- paste0('sims/varmodel/',seladv,'/10/')
 #treenms <- paste0('tree',1:30,'.nwk')
 #treenms <- paste0(treedir,treenms)
 #
@@ -122,12 +129,12 @@ getmets <- function(tree){
 #
 ## average over the simulations:
 #rocdat_10 <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_10,file='sims/varmodel/roc/rocdat_10.Rdata')
+#save(rocdat_10,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_10.Rdata'))
 #
 ######## 20%
 ########
 #
-#treedir <- 'sims/varmodel/20/'
+#treedir <- paste0('sims/varmodel/',seladv,'/20/')
 #treenms <- paste0('tree',1:30,'.nwk')
 #treenms <- paste0(treedir,treenms)
 #
@@ -144,12 +151,12 @@ getmets <- function(tree){
 #
 ## average over the simulations:
 #rocdat_20 <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_20,file='sims/varmodel/roc/rocdat_20.Rdata')
+#save(rocdat_20,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_20.Rdata'))
 #
 ######## 30%
 ########
 #
-#treedir <- 'sims/varmodel/30/'
+#treedir <- paste0('sims/varmodel/',seladv,'/30/')
 #treenms <- paste0('tree',1:30,'.nwk')
 #treenms <- paste0(treedir,treenms)
 #
@@ -166,12 +173,12 @@ getmets <- function(tree){
 #
 ## average over the simulations:
 #rocdat_30 <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_30,file='sims/varmodel/roc/rocdat_30.Rdata')
+#save(rocdat_30,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_30.Rdata'))
 #
 ######## 40%
 ########
 #
-#treedir <- 'sims/varmodel/40/'
+#treedir <- paste0('sims/varmodel/',seladv,'/40/')
 #treenms <- paste0('tree',1:30,'.nwk')
 #treenms <- paste0(treedir,treenms)
 #
@@ -188,12 +195,12 @@ getmets <- function(tree){
 #
 ## average over the simulations:
 #rocdat_40 <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_40,file='sims/varmodel/roc/rocdat_40.Rdata')
+#save(rocdat_40,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_40.Rdata'))
 #
 ######## 50%
 ########
 #
-#treedir <- 'sims/varmodel/50/'
+#treedir <- paste0('sims/varmodel/',seladv,'/50/')
 #treenms <- paste0('tree',1:30,'.nwk')
 #treenms <- paste0(treedir,treenms)
 #
@@ -210,65 +217,66 @@ getmets <- function(tree){
 #
 ## average over the simulations:
 #rocdat_50 <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_50,file='sims/varmodel/roc/rocdat_50.Rdata')
+#save(rocdat_50,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_50.Rdata'))
 #
+
+
+
+### We load the rocdat dataframes to create our plots:
 #
-#
-#
-#### We load the rocdat dataframes to create our plots:
-##
-#load('sims/varmodel/roc/rocdat_10.Rdata')
-#load('sims/varmodel/roc/rocdat_20.Rdata')
-#load('sims/varmodel/roc/rocdat_30.Rdata')
-#load('sims/varmodel/roc/rocdat_50.Rdata')
-#load('sims/varmodel/roc/rocdat_50.Rdata')
-#
-#
-#
-## We need to calculate AUC from each rocdat by quadrature:
-#
-#getauc <- function(x,y){
-#	# given gridpoints at x, y, calculate area under the curve y=y(x)
-#	# by averaging the left and right-endpoint quadratures:
-#	left <- sum(diff(c(0,x,1))*c(0,y))
-#	right <- sum(diff(c(0,x,1))*c(y,1))
-#	auc <- mean(c(left,right))
-#	return(auc)
-#}
-#
-#auc_10 <- with(as.data.frame(rocdat_10), getauc(rev(falsepos),rev(truepos)) )
-#auc_20 <- with(as.data.frame(rocdat_20), getauc(rev(falsepos),rev(truepos)) )
-#auc_30 <- with(as.data.frame(rocdat_30), getauc(rev(falsepos),rev(truepos)) )
-#auc_40 <- with(as.data.frame(rocdat_40), getauc(rev(falsepos),rev(truepos)) )
-#auc_50 <- with(as.data.frame(rocdat_50), getauc(rev(falsepos),rev(truepos)) )
-#
-#
-#
-#
-## Save plot:
-#pdf(file='figures/roc/varmodel_roc.pdf',height=7,width=7)
-#par(mfrow=c(1,1))
-#plot(truepos~falsepos,rocdat_10,type='l',lwd=2,
-#	xlab='False-positive rate',
-#	ylab='True-positive rate',
-#	main='Variant classification with LBI (n=500 samples)',
-#	cex.axis=1.5,cex.lab=1.5,cex.main=1.5)
-#lines(truepos~falsepos,rocdat_20,lwd=2,lty=2)
-#lines(truepos~falsepos,rocdat_30,lwd=2,lty=3)
-#lines(truepos~falsepos,rocdat_40,lwd=2,lty=4)
-#lines(truepos~falsepos,rocdat_50,lwd=2,lty=5)
-#legend('bottomright',
-#	legend=c('10%','20%','30%','40%','50%'),
-#	lty=c(1,2,3,4,5),lwd=2,bty='n',cex=1.5,
-#	title='Variant frequency')
-#abline(a=0,b=1,lwd=1)
-## Turn of plotting:
-#dev.off()
-#
-#
-#
-## Make a plot of the variant over time
-#
+load(paste0('sims/varmodel/',seladv,'/roc/rocdat_10.Rdata'))
+load(paste0('sims/varmodel/',seladv,'/roc/rocdat_20.Rdata'))
+load(paste0('sims/varmodel/',seladv,'/roc/rocdat_30.Rdata'))
+load(paste0('sims/varmodel/',seladv,'/roc/rocdat_40.Rdata'))
+load(paste0('sims/varmodel/',seladv,'/roc/rocdat_50.Rdata'))
+
+
+
+# We need to calculate AUC from each rocdat by quadrature:
+
+getauc <- function(x,y){
+	# given gridpoints at x, y, calculate area under the curve y=y(x)
+	# by averaging the left and right-endpoint quadratures:
+	left <- sum(diff(c(0,x,1))*c(0,y))
+	right <- sum(diff(c(0,x,1))*c(y,1))
+	auc <- mean(c(left,right))
+	return(auc)
+}
+
+auc_10 <- with(as.data.frame(rocdat_10), getauc(rev(falsepos),rev(truepos)) )
+auc_20 <- with(as.data.frame(rocdat_20), getauc(rev(falsepos),rev(truepos)) )
+auc_30 <- with(as.data.frame(rocdat_30), getauc(rev(falsepos),rev(truepos)) )
+auc_40 <- with(as.data.frame(rocdat_40), getauc(rev(falsepos),rev(truepos)) )
+auc_50 <- with(as.data.frame(rocdat_50), getauc(rev(falsepos),rev(truepos)) )
+
+
+
+
+# Save plot:
+pdf(file=paste0('figures/roc/varmod/',seladv,'/varmodel_roc.pdf'),height=7,width=7)
+par(mfrow=c(1,1))
+plot(truepos~falsepos,rocdat_10,type='l',lwd=2,
+	xlab='False-positive rate',
+	ylab='True-positive rate',
+	main = 'Selection coefficient = 0.10',
+	#main='Variant classification with LBI (n=500 samples)',
+	cex.axis=1.5,cex.lab=1.5,cex.main=1.5)
+lines(truepos~falsepos,rocdat_20,lwd=2,lty=2)
+lines(truepos~falsepos,rocdat_30,lwd=2,lty=3)
+lines(truepos~falsepos,rocdat_40,lwd=2,lty=4)
+lines(truepos~falsepos,rocdat_50,lwd=2,lty=5)
+legend('bottomright',
+	legend=c('10%','20%','30%','40%','50%'),
+	lty=c(1,2,3,4,5),lwd=2,bty='n',cex=1.5,
+	title='Variant frequency')
+abline(a=0,b=1,lwd=1)
+# Turn of plotting:
+dev.off()
+
+
+
+# Make a plot of the variant over time
+
 
 
 getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title'){
@@ -307,7 +315,9 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]-1))
 	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
 
-	p <- ggtree(tree,layout='rectangular') %<+% crud
+	p <- ggtree(tree,layout='rectangular', mrsd='2020-01-01') + theme_tree2()
+
+	p <- p %<+% crud
 
 	p1 <- p + geom_tree(linewidth=0.60) +
 		labs(title=title) + theme(plot.title=element_text(hjust=0.5,face='bold',size=18))
@@ -315,6 +325,17 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 		#theme(legend.text=element_text(size=18),legend.title=element_text(size=16,face='bold')) +
 		#theme(legend.position='left')
 
+	# tree's actual x- and y-ranges (before the heatmap is appended):
+	xrng <- layer_scales(p1)$x$range$range
+	yrng <- layer_scales(p1)$y$range$range
+
+	brks <- scales::pretty_breaks(n = 4)(xrng)
+	brks <- brks[brks >= xrng[1] & brks <= xrng[2]]
+	lbls <- as.character(as.integer(format(date_decimal(brks), '%Y')))
+
+	# geometry for the hand-drawn axis, positioned just below the tips:
+	axis_y  <- yrng[1] - 0.03 * diff(yrng)
+	tick_ln <- 0.015 * diff(yrng)
 
         # calculate tree height:
         treeheight <- max(node.depth.edgelength(tree))
@@ -375,7 +396,25 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
                 scale_fill_continuous(name='Value of\nLBI\nat tips\n(raw)',
                 low='#FEFE62',high='#5D3A9B') +
                 theme(plot.margin=unit(c(1,1,3,1),'cm')) +
-                coord_cartesian(clip = 'off') +
+		 theme(
+                        axis.line.x  = element_blank(),
+                        axis.ticks.x = element_blank(),
+                        axis.text.x  = element_blank(),
+                        axis.title.x = element_blank(),
+                        plot.margin  = unit(c(1,1,4,1),'cm')
+                ) +
+                # axis line, restricted to the tree's x-range only:
+                annotate('segment', x = xrng[1], xend = xrng[2],
+                         y = axis_y, yend = axis_y, linewidth = 0.5) +
+                # tick marks at each year break:
+                annotate('segment', x = brks, xend = brks,
+                         y = axis_y, yend = axis_y - tick_ln, linewidth = 0.5) +
+                # year labels:
+                annotate('text', x = brks, y = axis_y - tick_ln*2,
+                         label = lbls, size = 3.5, angle=-45, vjust = 1) +
+                annotate('text', x = mean(xrng), y = axis_y - tick_ln*5,
+                         label = 'Year', size = 4, fontface = 'bold', vjust = 1) +         
+	       coord_cartesian(clip = 'off') +
                 ggtitle(title) +
                 theme(plot.title=element_text(hjust=0.5,size=18,face="bold")) + 
 		theme(axis.text=element_text(size=18), 
@@ -416,7 +455,8 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 
 # read in some representative trees:
 
-treedirs <- paste0('sims/varmodel/',c(10,20,30,40,50),'/tree3.nwk')
+# default is tree3.nwk
+treedirs <- paste0('sims/varmodel/',seladv,'/',c(10,20,30,40,50),'/tree3.nwk')
 
 treelist <- list()
 
@@ -433,7 +473,7 @@ p50 <- getmainplot(treelist[[5]], taulbi=20, title='Variant @ 50%')[[1]]
 
 figvar <- plot_grid(p10,p20,p30,p40,p50,nrow=1)
 
-ggsave(figvar, file='figures/varmodelfigs/variant_10_thru_50.png',height=16,width=24)
+ggsave(figvar, file=paste0('figures/varmodelfigs/',seladv,'/variant_10_thru_50.png'),height=16,width=24)
 
 
 
