@@ -1,3 +1,11 @@
+require(ggnewscale)
+require(ggplot2)
+require(ggtree)
+require(tidyr)
+require(dplyr)
+require(lubridate)
+require(cowplot)
+
 getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title'){
 
 	ntests <- Ntip(tree)
@@ -41,7 +49,8 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 
 	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
 
-	p <- ggtree(tree,layout='rectangular') %<+% crud
+        p <- ggtree(tree,layout='rectangular', mrsd='2020-01-01') + theme_tree2()
+	p <- p %<+% crud
 
 	p1 <- p + geom_tree(linewidth=0.60) +
 		theme(legend.position='none') +
@@ -50,6 +59,17 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 		#theme(legend.text=element_text(size=18),legend.title=element_text(size=16,face='bold')) +
 		#theme(legend.position='left')
 
+        # tree's actual x- and y-ranges (before the heatmap is appended):
+        xrng <- layer_scales(p1)$x$range$range
+        yrng <- layer_scales(p1)$y$range$range
+
+        brks <- scales::pretty_breaks(n = 4)(xrng)
+        brks <- brks[brks >= xrng[1] & brks <= xrng[2]]
+        lbls <- as.character(as.integer(format(date_decimal(brks), '%Y')))
+
+        # geometry for the hand-drawn axis, positioned just below the tips:
+        axis_y  <- yrng[1] - 0.03 * diff(yrng)
+        tick_ln <- 0.015 * diff(yrng)
 
         # calculate tree height:
         treeheight <- max(node.depth.edgelength(tree))
@@ -109,7 +129,25 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
                 scale_fill_continuous(name='Value of\nLBI\nat tips\n(raw)',
                 low='#FEFE62',high='#5D3A9B') +
                 theme(plot.margin=unit(c(1,1,3,1),'cm')) +
-                coord_cartesian(clip = 'off') +
+                theme(
+                        axis.line.x  = element_blank(),
+                        axis.ticks.x = element_blank(),
+                        axis.text.x  = element_blank(),
+                        axis.title.x = element_blank(),
+                        plot.margin  = unit(c(1,1,4,1),'cm')
+                ) +
+                # axis line, restricted to the tree's x-range only:
+                annotate('segment', x = xrng[1], xend = xrng[2],
+                         y = axis_y, yend = axis_y, linewidth = 0.5) +
+                # tick marks at each year break:
+                annotate('segment', x = brks, xend = brks,
+                         y = axis_y, yend = axis_y - tick_ln, linewidth = 0.5) +
+                # year labels:
+                annotate('text', x = brks, y = axis_y - tick_ln*2,
+                         label = lbls, size = 3.5, angle=-45, vjust = 1) +
+                annotate('text', x = mean(xrng), y = axis_y - tick_ln*5,
+                         label = 'Year', size = 4, fontface = 'bold', vjust = 1) +
+		coord_cartesian(clip = 'off') +
                 ggtitle(title) +
                 theme(plot.title=element_text(hjust=0.5,size=18,face="bold")) + 
 		theme(axis.text=element_text(size=18), 

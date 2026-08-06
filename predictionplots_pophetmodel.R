@@ -1,6 +1,10 @@
 # See how well Local Branching Index classifies infections according to host
 # subpopulation (one group has elevated susceptibility to infection)
 
+# load the plotting function
+source('getpophetplotter.R')
+
+
 
 # Let's try maximizing F statistics of lbi~state at tips (but not nodes), ditto but with nodes,
 #	and also just try maximizing variance in LBI at the tips
@@ -622,8 +626,8 @@ p22 <- getmainplot(tree_case2_theta2, taulbi=tauopt_case2_theta2,
 fig_case1 <- plot_grid(p11,p12,nrow=1)
 fig_case2 <- plot_grid(p21,p22,nrow=1)
 
-ggsave(fig_case1, file='figures/pophetmodelfigs/Fig6_case1.png',height=14,width=18)
-ggsave(fig_case2, file='figures/pophetmodelfigs/Fig6_case2.png',height=14,width=18)
+ggsave(fig_case1, file='figures/pophetmodelfigs/Fig4_case1.png',height=14,width=18)
+ggsave(fig_case2, file='figures/pophetmodelfigs/Fig4_case2.png',height=14,width=18)
 
 # Show the example in Fig S8 that shows you can have a negative or positive correlation w/LBI in Case 2 theta 2(
 #	(assortative mixing turned on)
@@ -641,7 +645,7 @@ p2 <- getmainplot(treelist[[24]], taulbi=33,
 
 fig_ex <- plot_grid(p1,p2,nrow=1)
 
-ggsave(fig_ex, file='figures/pophetmodelfigs/FigS7.png',height=14,width=18)
+ggsave(fig_ex, file='figures/pophetmodelfigs/FigS8.png',height=14,width=18)
 
 ### Plot some of the case2, theta3 trees (no superspreading)
 ## Pick a good example from case 2, theta2:
@@ -692,7 +696,7 @@ pinf2 <- getmainplot(tree2, taulbi=tau2,
 
 fig_inf <- plot_grid(pinf1,pinf2,nrow=1)
 
-ggsave(fig_inf, file='figures/pophetmodelfigs/FigS8_trees.png',height=14,width=18)
+ggsave(fig_inf, file='figures/pophetmodelfigs/FigS9_trees.png',height=14,width=18)
 
 
 ## Show the ROC plot for Case 2 with elevated susceptibility: 
