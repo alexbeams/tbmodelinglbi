@@ -8,7 +8,7 @@ source("compile_variant_and_superspreading_model.R")
 #############
 #############
 
-ntests <- 84
+ntests <- 84  #84 and 72 are the largest ones; 34 is the next largest
 
 time <- c(-150,50)
 #time <- c(-750,50)

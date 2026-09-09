@@ -2,6 +2,8 @@ rm(list=ls())
 
 source("compile_variant_and_superspreading_model.R")
 
+require(ggnewscale)
+
 
 #############
 #############

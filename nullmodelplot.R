@@ -1,3 +1,4 @@
+require(cowplot)
 require(lubridate)
 require(ggnewscale)
 require(phytools)
@@ -279,7 +280,10 @@ lin4complete <- lin4tree
 subtrees <- treeSlice(lin4tree, slice = 1317 - 200, orientation = "tipwards", trivial = TRUE)
 
 tip_counts <- sapply(subtrees, function(x) length(x$tip.label))
-largest_clade <- subtrees[[which.max(tip_counts)]]
+largest_clade <- subtrees[[which.max(tip_counts)]] # this should be tip_counts[[26]]
+#largest_clade <- subtrees[[61]] 
+#largest_clade <- subtrees[[42]] 
+#largest_clade <- subtrees[[28]] 
 
 lin4tree <- largest_clade
 
