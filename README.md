@@ -18,7 +18,7 @@ The most important package in the list is TiPS. It provides a way to specify a c
 
 Here is how to reproduce the rest of the figures in the manuscript:
 
-Fig 3, Fig S3, Fig S4 - run nullmodel.R. This is a smaller version of the code used to produce Fig4.
+Fig 3, Fig S3, Fig S4 - run nullmodel.R and then nullmodelplot.R. This is a smaller version of the code used to produce Fig4.
 
 Fig 4 - run nullmodel_bigsim.R (which calls nullmodel_bigsim_gettrees.R) to simulate all of the trees, then run predictionplots_nullmodel.R to produce ROC plots
 
