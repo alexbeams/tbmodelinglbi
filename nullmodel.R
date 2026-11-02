@@ -83,10 +83,7 @@ gettheta <- function(x,fractrans){
 	return(theta)
 }
 
-# 2 parametrizations: low and high prevalence:
-#theta1 <- gettheta(0.001) # low prevalence
-#theta2 <- gettheta(0.01)  # high prevalence
-
+# 2 parametrizations: superpsreading on and off:
 theta1 <- gettheta(0.01,0.1)
 theta2 <- gettheta(0.01,0.9)
 
@@ -134,7 +131,6 @@ plottraj2$date <- as.Date(plottraj2$Time * 365)
 
 # plot the trajectories of out1 and out2:
 
-pdf(file='figures/nullmodelfigs/nullmodeltrajs.pdf',height=5,width=9)
 
 par(mfrow=c(1,2))
 
@@ -157,7 +153,6 @@ lines(log10(IL)~date,plottraj2,type='l',col='#005AB5',main='Active TB',lwd=2.5,
 	ylab='No. of infections',xlab='Date',lty='dashed')
 lines(log10(IH)~date,plottraj2,type='l',col='#005AA0',lwd=2.5)
 
-dev.off()
 
 # use tms.lin4 to generate simulated trees with the same height (approx.) as the
 #	empirical lineage 4 tree

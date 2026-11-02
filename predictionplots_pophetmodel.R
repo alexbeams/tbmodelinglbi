@@ -47,12 +47,6 @@ getmets <- function(tree){
 	crud[grep('IH2',crud$label[1:ntests]),'state'] <- 'Group 2'
 	crud[grep('IL2',crud$label[1:ntests]),'state'] <- 'Group 2'
 
-
-#	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], 
-#		function(z) substr(z, regexpr("S+",z)[1]+3, regexpr(".[+]=",z)[1]+0))
-#
-#	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
-
 	# Calculate F statistics from analysis of variance for each tau:
 	Fstats <- apply(crud[,paste0('lbi',taulbis)], 2, function(x) summary(aov(x~state,crud))[[1]][['F value']][1])
 

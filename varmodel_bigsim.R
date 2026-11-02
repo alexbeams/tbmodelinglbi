@@ -129,8 +129,8 @@ numouts <- 30
 # going in to manually change siminds to re-run the small number that fail
 # under a different random seed until we get 30 simulations 
 
-#siminds <- 1:numouts
-siminds <-  c(14)
+siminds <- 1:numouts
+#siminds <-  (# manually enter in the failed indices here and rerun)
 
 for(outind in siminds){
  outpath <- paste0('sims/varmodel/out',outind,'.txt')

@@ -12,9 +12,6 @@ require(cowplot)
 
 source('lbi.R')
 
-
-
-
 getmets <- function(tree){
 
 	ntests <- Ntip(tree)
@@ -22,15 +19,6 @@ getmets <- function(tree){
 	# want to add in rows for nodes with times and LBIs
 	crud <- data.frame(label = tree$tip.label)
 	
-	# Uncomment to use node information -- but it really only makes sense to maximize F statistics using tip data:
-#	# the node labels have the times; extract these:
-#	m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
-#
-#	crud2 <- data.frame(label = names(m))
-#
-#	# the node labels are super clunky, but we need to keep them to match with the tree
-#	crud <- rbind(crud,crud2)
-
 	# calculate LBI for the tips and the nodes for several values of bandwidth, tau:
 	taulbis <- seq(1,100,length=50)
 
@@ -42,12 +30,6 @@ getmets <- function(tree){
 	crud[grep('IL',crud$label[1:ntests]),'state'] <- 'I'
 	crud[grep('JH',crud$label[1:ntests]),'state'] <- 'J'
 	crud[grep('JL',crud$label[1:ntests]),'state'] <- 'J'
-
-
-#	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], 
-#		function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]+0))
-#
-#	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
 
 	# Calculate F statistics from analysis of variance for each tau:
 	Fstats <- apply(crud[,paste0('lbi',taulbis)], 2, function(x) summary(aov(x~state,crud))[[1]][['F value']][1])
@@ -76,8 +58,6 @@ getmets <- function(tree){
 		tp <- tab[2,2]
 		fp <- tab[1,2]
 
-
-
 		prc <- tp/(tp+fp)
 		acc <- (tp+tn)/(tp+tn+fp+fn)
 
@@ -104,121 +84,121 @@ getmets <- function(tree){
 ## to construct the plots
 
 # Which selection coefficient to use?
-seladv <- 10
+seladv <- 25
 
 # What are the paths for all of the trees we want to load?
 
-#
-######## 10%
-########
-#
-#treedir <- paste0('sims/varmodel/',seladv,'/10/')
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_10 <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_10,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_10.Rdata'))
-#
-######## 20%
-########
-#
-#treedir <- paste0('sims/varmodel/',seladv,'/20/')
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_20 <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_20,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_20.Rdata'))
-#
-######## 30%
-########
-#
-#treedir <- paste0('sims/varmodel/',seladv,'/30/')
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_30 <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_30,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_30.Rdata'))
-#
-######## 40%
-########
-#
-#treedir <- paste0('sims/varmodel/',seladv,'/40/')
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_40 <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_40,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_40.Rdata'))
-#
-######## 50%
-########
-#
-#treedir <- paste0('sims/varmodel/',seladv,'/50/')
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-## make a big list where we will store all of the matrices to create our ROC plot
-## One ROC curve for each configuration of tests (Nyr and ntests)
-## ROC curves are averaged over 30 simulations
-#metlist <- list()
-#
-#for(treenm in treenms){
-#	tree <- read.tree(treenm)
-#	met <- getmets(tree)
-#	metlist[[treenm]] <- met	
-#}
-#
-## average over the simulations:
-#rocdat_50 <- apply(simplify2array(metlist),1:2,mean)
-#save(rocdat_50,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_50.Rdata'))
-#
+
+####### 10%
+#######
+
+treedir <- paste0('sims/varmodel/',seladv,'/10/')
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_10 <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_10,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_10.Rdata'))
+
+####### 20%
+#######
+
+treedir <- paste0('sims/varmodel/',seladv,'/20/')
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_20 <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_20,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_20.Rdata'))
+
+####### 30%
+#######
+
+treedir <- paste0('sims/varmodel/',seladv,'/30/')
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_30 <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_30,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_30.Rdata'))
+
+####### 40%
+#######
+
+treedir <- paste0('sims/varmodel/',seladv,'/40/')
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_40 <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_40,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_40.Rdata'))
+
+####### 50%
+#######
+
+treedir <- paste0('sims/varmodel/',seladv,'/50/')
+treenms <- paste0('tree',1:30,'.nwk')
+treenms <- paste0(treedir,treenms)
+
+# make a big list where we will store all of the matrices to create our ROC plot
+# One ROC curve for each configuration of tests (Nyr and ntests)
+# ROC curves are averaged over 30 simulations
+metlist <- list()
+
+for(treenm in treenms){
+	tree <- read.tree(treenm)
+	met <- getmets(tree)
+	metlist[[treenm]] <- met	
+}
+
+# average over the simulations:
+rocdat_50 <- apply(simplify2array(metlist),1:2,mean)
+save(rocdat_50,file=paste0('sims/varmodel/',seladv,'/roc/rocdat_50.Rdata'))
+
 
 
 
@@ -229,8 +209,6 @@ load(paste0('sims/varmodel/',seladv,'/roc/rocdat_20.Rdata'))
 load(paste0('sims/varmodel/',seladv,'/roc/rocdat_30.Rdata'))
 load(paste0('sims/varmodel/',seladv,'/roc/rocdat_40.Rdata'))
 load(paste0('sims/varmodel/',seladv,'/roc/rocdat_50.Rdata'))
-
-
 
 # We need to calculate AUC from each rocdat by quadrature:
 
@@ -250,10 +228,8 @@ auc_40 <- with(as.data.frame(rocdat_40), getauc(rev(falsepos),rev(truepos)) )
 auc_50 <- with(as.data.frame(rocdat_50), getauc(rev(falsepos),rev(truepos)) )
 
 
-
-
 # Save plot:
-pdf(file=paste0('figures/roc/varmod/',seladv,'/varmodel_roc.pdf'),height=7,width=7)
+png(file=paste0('figures/Fig3stats.png'),height=7,width=7,units='in',res=300)
 par(mfrow=c(1,1))
 plot(truepos~falsepos,rocdat_10,type='l',lwd=2,
 	xlab='False-positive rate',
@@ -274,10 +250,7 @@ abline(a=0,b=1,lwd=1)
 dev.off()
 
 
-
 # Make a plot of the variant over time
-
-
 
 getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title'){
 	ntests <- Ntip(tree)
@@ -447,8 +420,6 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 	alnd <- align_plots(heatfig,p1.box,align='v',axis='lr')
 	fig.p1 <- plot_grid(alnd[[1]],alnd[[2]],ncol=1, rel_heights=c(2,0.5))
 
-
-
         return(list(fig.p1,dat))
 }
 
@@ -473,7 +444,7 @@ p50 <- getmainplot(treelist[[5]], taulbi=20, title='Variant @ 50%')[[1]]
 
 figvar <- plot_grid(p10,p20,p30,p40,p50,nrow=1)
 
-ggsave(figvar, file=paste0('figures/varmodelfigs/',seladv,'/variant_10_thru_50.png'),height=16,width=24)
+ggsave(figvar, file=paste0('figures/Fig3.png'),height=16,width=24)
 
 
 

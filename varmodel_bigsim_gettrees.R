@@ -51,22 +51,6 @@ if(max(traj$p) > 0.6){
 	# set the minimum time for longitudinal sampling to commence:
 	mintime <- -120
 
-	# For longitudinal sampling, we would want to account for
-	# changing variant frequency over time, but over a 5-yr period
-	# it isn't necessary -- can uncomment to change if needed 
-
-	#crud <- plottraj[plottraj$Time > mintime,]
-	#crud <- crud[sort(sample(1:dim(crud)[1],ntests)),]
-	#crud$pih <- (1-crud$p) * pH
-	#crud$pil <- (1-crud$p) * (1-pH)
-	#crud$pjh <- crud$p * pH
-	#crud$pjl <- crud$p * (1-pH)
-	#
-	#crud$sampled <- apply(crud, 1, function(x) c('IH','IL','JH','JL')[which(t(rmultinom(1,1,prob=x[c('pih','pil','pjh','pjl')])) > 0)])
-	#
-	#tms.long <- crud[,c('Time','sampled')]
-	#colnames(tms.long) <- c('Date','Comp')
-
 	# Simulate trees with sampling once variant reaches proportion p:
 	tree.10 <- getsimtree.p(tms.10,out,0.10)
 	write.tree(tree.10, file= paste0('sims/varmodel/',seldir,'/10/tree',outind,'.nwk'))

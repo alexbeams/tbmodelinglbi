@@ -1,14 +1,9 @@
-# This code produces Figure 4.
-
+# This code produces Figure S5.
 
 # See how well Local Branching Index classifies superspreaders
 require(ape)
 
 source('lbi.R')
-
-# read in a simulated tree
-#treepath <- 'sims/nullmodel/500/5yr/tree3.nwk'
-#tree <- read.tree(treepath)
 
 getmets <- function(tree){
 
@@ -16,15 +11,6 @@ getmets <- function(tree){
 
 	# want to add in rows for nodes with times and LBIs
 	crud <- data.frame(label = tree$tip.label)
-
-	# Let's just try to maximize the difference in LBI across state at the tips, not the nodes (uncomment to change):	
-	## the node labels have the times; extract these:
-	#m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
-
-	#crud2 <- data.frame(label = names(m))
-
-	## the node labels are super clunky, but we need to keep them to match with the tree
-	#crud <- rbind(crud,crud2)
 
 	# calculate LBI for the tips and the nodes for several values of bandwidth, tau:
 	taulbis <- 1:10
@@ -35,11 +21,6 @@ getmets <- function(tree){
 	crud$state <- NA
 	crud[grep('IH',crud$label[1:ntests]),'state'] <- 'IH'
 	crud[grep('IL',crud$label[1:ntests]),'state'] <- 'IL'
-
-#	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], 
-#		function(z) substr(z, regexpr("S+",z)[1]+2, regexpr(".[+]=",z)[1]+0))
-#
-#	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
 
 	# Calculate F statistics from analysis of variance for each tau:
 	Fstats <- apply(crud[,paste0('lbi',taulbis)], 2, function(x) summary(aov(x~state,crud))[[1]][['F value']][1])
@@ -84,7 +65,7 @@ getmets <- function(tree){
 }
 
 
-## Commenting out the following portion, which calculates
+## Can comment out the following portion after simulating, which calculates
 ## false positives, true positives, etc. from the trees 
 ## but which is now saved - so we load the rocdat's below
 ## to construct the plots
@@ -314,7 +295,7 @@ auc_2000_20yr <- with(as.data.frame(rocdat_2000_20yr), getauc(rev(falsepos),rev(
 
 
 
-pdf(file='figures/roc/nullmodel_roc_2.pdf',height=6,width=12)
+pdf(file='figures/FigS5b.pdf',height=6,width=12)
 par(mfrow=c(1,2))
 plot(truepos~falsepos,rocdat_500_5yr,type='l',lwd=2,
 	xlab='False-positive rate',
@@ -342,7 +323,7 @@ dev.off()
 
 # try plotting by duration:
 
-pdf(file='figures/roc/nullmodel_roc.pdf',height=10,width=10)
+pdf(file='figures/FigS5a.pdf',height=10,width=10)
 par(mfrow=c(2,2))
 
 plot(truepos~falsepos,rocdat_500_5yr,type='l',lwd=2,
@@ -352,9 +333,6 @@ plot(truepos~falsepos,rocdat_500_5yr,type='l',lwd=2,
 	cex.axis=1.5,cex.lab=1.5,cex.main=1.5)
 lines(truepos~falsepos,rocdat_2000_5yr,lwd=2,lty=2)
 abline(a=0,b=1,lwd=1,lty='dotted')
-#legend('bottomright',
-#	legend=c('500 tests', '2000 tests'),
-#	lty=c(1,2),lwd=2,bty='n',cex=1.5)
 legend('bottomright',
 	legend=c(
 		bquote('500 tests, AUC' ==.(round(auc_500_5yr,2))), 

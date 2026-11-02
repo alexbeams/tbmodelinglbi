@@ -125,9 +125,6 @@ getmainplot <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='title
 			theme(panel.spacing = unit(0,'pt'),legend.title =element_text(size=18),
 				legend.text=element_text(size=18)) 
 
-	#discretefigvar2 <- ggplot(discretefigvar, aes(x=c(1),y=label)) +
-	#	geom_tile(aes(fill=Host)) + xlab(NULL) + ylab(NULL)
-	 
 	discretefigvar2 <- discretefigvar + new_scale_fill()
 
         # use a heatmap to visualize the statistics:
@@ -201,9 +198,9 @@ figlong <- plot_grid(
 		getmainplot(tree2,title='Longitudinal sampling,\nhomogeneous infectiousness',taulbi=5,tauthd=10,taurels=20,tauclust=20)[[1]],
 		nrow=1)
 
-ggsave(figcross, file='figures/nullmodelfigs/Fig3_simtrees.png', dpi=600, height=16, width=12)
+ggsave(figcross, file='figures/Fig2.png', dpi=600, height=16, width=12)
 
-ggsave(figlong, file='figures/nullmodelfigs/FigS4_simtrees.png', dpi=600, height=16, width=12)
+ggsave(figlong, file='figures/FigS6.png', dpi=600, height=16, width=12)
 
 # Want to visualize the relationship between LBI and superspreader status
 dat1 <- getmainplot(tree1,title='')[[2]]
@@ -237,42 +234,13 @@ boxdat <- rbind(dat3,dat4)
 boxdat$Sim <- factor(boxdat$Sim, levels=c(4,3))
 boxdat$Infectiousness <- factor(boxdat$Infectiousness, levels=c('Low','High'))
 
-
-#pdf(file='figures/nullmodelfigs/boxplots.pdf',width=8,height=8)
-#par(mfrow=c(1,1))
-#boxplot(LBIraw~Infectiousness*Sim,boxdat,col=c('blue','blue','darkblue','darkblue'),
-#	xaxt='n',main='LBI ~ Infectiousness x Sampling scheme',xlab='',
-#	ylab='Local Branching Index')
-#axis(1, line=2,
-#	at = c(1,2,3,4),
-#	labels = c(
-#		'Low\ninfectiousness+\nlongitudinal\nsampling',
-#		'High\ninfectiousness+\nlongitudinal\nsampling',
-#		'Low\ninfectiousness+\ncross-sectional\nsampling',
-#		'High\ninfectiousness+\ncross-sectional\nsampling'),
-#	tick=F, cex=0.3)
-##dev.off()
-
-#pdf(file='figures/nullmodelfigs/boxplots.pdf',width=9,height=9)
-#par(mfrow=c(1,2))
-#boxplot(LBI~Infectiousness,dat3,main='Cross-sectional sampling,\nsuperspreading')
-#boxplot(LBI~Infectiousness,dat4,main='Longitudinal sampling,\nsuperspreading')
-#dev.off()
-
 gettbls <- function(tree){
 	tbls <-	tree$edge.length[ tree$edge[,2] <= length(tree$tip.label) ]
 	return(tbls)
 }
 
 
-#dat1 <- getmainplot(tree1)[[2]]
-#dat2 <- getmainplot(tree2)[[2]]
-
-# calculate LTT, LBI, and TBL for the empirical tree:
-#lin4phi <- read.nexus('/Users/abeams/Documents/projects/TB/lineage_4_delphy/alex/lineage4_delphy.trees')
-#lin4tree <- lin4phi[[200]]
-
-lin4tree <- read.tree('/Users/abeams/Documents/projects/tblbi/data/BactDatingLin4_relaxed_fixed.tree')
+lin4tree <- read.tree('data_analysis/BactDatingLin4_relaxed_fixed_anonymized.tree')
 
 lin4complete <- lin4tree
 
@@ -294,7 +262,7 @@ lin4tbl <- gettbls(lin4tree)
 
 # make a panel displaying LTT, distribution of LBI, and tbl distribution:
 
-pdf(file='figures/nullmodelfigs/Fig3_stats.pdf',height=5,width=15)
+png(file='figures/Fig3_stats.png',height=5,width=15, res=300, units='in')
 
 par(mfrow=c(1,3),mar=c(5,5,4,2))
 
@@ -390,14 +358,6 @@ getboxtreefig <- function(tree,title='add a title!',titleadjust=0.45,ptcex=1){
 	p <- p %<+% crud
 
 	# plot it!
-	#p1 <- p + geom_tippoint(aes(col=group)) + geom_nodepoint(aes(col=group)) + 
-	#	scale_color_discrete(name='Host subpopulation',
-	#	type=c('gray80','gray27'))  +
-	#	theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face='bold')) +
-	#	theme(legend.position='none')	
-	#	#theme(legend.text=element_text(size=18),legend.title=element_text(size=16,face='bold')) +
-	#	#theme(legend.position='left')
-
 	p1 <- p + aes(col=state) + geom_tree(linewidth=0.60) +
 		scale_color_discrete(name='Host',
 		values=c('IL'='gray80','IH'='gray27')) +
@@ -476,11 +436,11 @@ gettauplot <- function(tree,title='add a title!'){
 }
 
 
-pdf(file='figures/nullmodelfigs/FigS3_superspreading.pdf',height=6,width=6)
+pdf(file='figures/FigS4_superspreading.pdf',height=6,width=6)
 gettauplot(tree3, title='Superspreading')
 dev.off()
 
-pdf(file='figures/nullmodelfigs/FigS3_homogeneous.pdf',height=6,width=6)
+pdf(file='figures/FigS4_homogeneous.pdf',height=6,width=6)
 gettauplot(tree1, title='Homogeneous infectiousness')
 dev.off()
 

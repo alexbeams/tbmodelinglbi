@@ -345,6 +345,6 @@ getmainplotlong <- function(tree,taulbi=4,tauthd=5,taurels=6,tauclust=6,title='t
 }
 
 fig.long <- getmainplotlong(tree.long, title='Longitudinal observations', taulbi=20)[[1]]
-ggsave(fig.long, file='figures/varmodelfigs/FigS6.png', dpi=300, height=8, width=12)
+ggsave(fig.long, file='figures/FigS7.png', dpi=300, height=8, width=12)
 
 
