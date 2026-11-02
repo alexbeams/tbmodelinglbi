@@ -20,7 +20,9 @@ The most important package in the list is TiPS. It provides a way to specify a c
 
 Here is how to reproduce the main figures in the manuscript:
 
-Fig 1, Fig S2, Fig S3 - run getFigMalawi.R
+Fig 1, Fig S2 - run getFigMalawi.R
+
+Fig S3 - run getFigLBIvsTHD.R
 
 Fig 2, Fig S4, Fig S6 - run nullmodel.R and then nullmodelplot.R.
 
