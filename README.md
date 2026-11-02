@@ -32,4 +32,4 @@ FigS5, FigS6 - run varmodel.R
 
 Fig4, FigS8, Fig S9 - run pophetmodel_case1_bigsim.R, pophetmodel_case2_bigsim.R (which call pophetmodel_casex_bigsim_gettrees.R), then run predictionplots_pophetmodel.R to produce each of these figures
 
-Fig 5, S10, S11, S12
+Fig 5, S10, S11, S12 - run malawi_lbi.R, which is located in the data_analysis folder
