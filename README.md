@@ -20,16 +20,18 @@ The most important package in the list is TiPS. It provides a way to specify a c
 
 Here is how to reproduce the main figures in the manuscript:
 
-Fig 1, Fig S2, Fig S3 - 
+Fig 1, Fig S2 - run getFigMalawi.R
+
+Fig S3 - run getFigLBIvsTHD.R
 
 Fig 2, Fig S4, Fig S6 - run nullmodel.R and then nullmodelplot.R.
 
-Fig S5 - run nullmodel_bigsim.R (which calls nullmodel_bigsim_gettrees.R) to simulate all of the trees, then run predictionplots_nullmodel.R to produce ROC plots
+Fig S5 - run nullmodel_bigsim.R (which calls nullmodel_bigsim_gettrees.R) to simulate all of the trees, then run predictionplots_nullmodel.R to produce ROC plots. In prediciton_plots_nullmodel.R, there is a section that runs the simulations which can be commented out to regenerate figures from saved simulations.
 
-Fig 3, Fig S7,  - run varmodel_bigsim.R (which calls varmodel_bigsim_gettrees.R) to simulate the trees, then run predictionplots_varmodel.R 
+Fig 3, data for Tables S4 and S5  - run varmodel_bigsim.R (which calls varmodel_bigsim_gettrees.R) to simulate the trees, then run predictionplots_varmodel.R (and in this last file, there is a section that runs simulations which can be commented out to regenerate figures from saved simulations.)
 
-FigS5, FigS6 - run varmodel.R
+Fig S7 - run varmodel_phylowave.R
 
 Fig4, FigS8, Fig S9 - run pophetmodel_case1_bigsim.R, pophetmodel_case2_bigsim.R (which call pophetmodel_casex_bigsim_gettrees.R), then run predictionplots_pophetmodel.R to produce each of these figures
 
-Fig 5, S10, S11, S12
+Fig 5, S10, S11, S12 - run malawi_lbi.R, which is located in the data_analysis folder
