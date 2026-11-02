@@ -4,7 +4,7 @@ To protect individuals' privacy, sequence names in the metadata and phylogenetic
 
 The metadata file (data_analysis/tblbi_metadata_anonymized.csv) contains columns for covariates corresponding to sampled infections corresponding to tips in the phylogenetic trees (data_analysis/BactDatingLin4_strict_fixed_anonymized.tree and data/analysis_BactDatingLin4_relaxed_fixed_anonymized.tree). The first column of the metadata csv file contains the corresponding tip in the phylogenetic trees, the second column contains the year that the infection was sampled, and all other columns correspond to the covariates summarized in Table S1 of the Electronic Supplementary Material associated with our manuscript. The phylogenetic trees are the same ones described in the Methods section of our manuscript. The branch lengths in the trees represent time as measured in years.
 
-All of the code is run in R version 4.4.3. You will need the following packages and their dependencies:
+All of the code is run in R version 4.4.3. The file environment.yml contains the settings for the mamba environment we use to run this analysis. The main packages (and their dependencies) you will need are the following:
 
 ```{r}
 install.packages(TiPS)
