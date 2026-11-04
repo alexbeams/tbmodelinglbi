@@ -96,63 +96,70 @@ dT <- 1
 initialStates <- c(Npop,0,1,0,0,0,0)
 names(initialStates) <- c('S','L','IH','IL','M','JH','JL') 
 
-# Create a function to simulae a tree from a realization of
-# the compartmental model - it depends on tms, output, and p:
-
-# the save functionality in simulate_tree seems buggy,
-# but the write.tree function seems to work just fine.
-
-getsimtree.p <- function(tms,output,p){
-	simulate_tree(
-	simuResults=output,
-	dates=c(tms),
-	deme=c('IH','IL','L','JH','JL','M'),
-	sampled=c(
-		IH=pH*(1-p),
-		IL=(1-pH)*(1-p),
-		JH=pH*p,
-		JL=(1-pH)*p),
-	root = 'IH',
-	nTrials=50,
-	resampling=FALSE,
-	addInfos = TRUE)
-}
 
 
-# How many simulations do we want?
-numouts <- 30
+############################################################
+# Uncomment the following section to re-run new simulations:
+############################################################
 
 
-# produce the trajectory from which to obtain trees - where to save?
-
-# Not all of the these will succeed at generating trees -- for now, just
-# going in to manually change siminds to re-run the small number that fail
-# under a different random seed until we get 30 simulations 
-
-siminds <- 1:numouts
-#siminds <-  (# manually enter in the failed indices here and rerun)
-
-for(outind in siminds){
- outpath <- paste0('sims/varmodel/out',outind,'.txt')
-
- # run the sim. These files are huge (~500 Mb), so we'll just
- # save the seeds used to run these
- out <-  sir_simu(
-    paramValues = as.list(theta),
-    initialStates = initialStates,
-    tau = .0001,
-    times = time,
-    method = "mixed",
-    verbose = TRUE,
-    nTrials = 100
-    )
- #Save the seed:
- writeLines(as.character(out$seed), paste0('sims/varmodel/',seldir,'/seed',outind,'.txt'))
-
- # Simulate trees for different variant frequencies from 10% -- 50%.
- source('varmodel_bigsim_gettrees.R')
-
- # close loop, run another trajectory
-}
-
-
+## Create a function to simulae a tree from a realization of
+## the compartmental model - it depends on tms, output, and p:
+#
+## the save functionality in simulate_tree seems buggy,
+## but the write.tree function seems to work just fine.
+#
+#getsimtree.p <- function(tms,output,p){
+#	simulate_tree(
+#	simuResults=output,
+#	dates=c(tms),
+#	deme=c('IH','IL','L','JH','JL','M'),
+#	sampled=c(
+#		IH=pH*(1-p),
+#		IL=(1-pH)*(1-p),
+#		JH=pH*p,
+#		JL=(1-pH)*p),
+#	root = 'IH',
+#	nTrials=50,
+#	resampling=FALSE,
+#	addInfos = TRUE)
+#}
+#
+#
+## How many simulations do we want?
+#numouts <- 30
+#
+#
+## produce the trajectory from which to obtain trees - where to save?
+#
+## Not all of the these will succeed at generating trees -- for now, just
+## going in to manually change siminds to re-run the small number that fail
+## under a different random seed until we get 30 simulations 
+#
+#siminds <- 1:numouts
+##siminds <-  (# manually enter in the failed indices here and rerun)
+#
+#for(outind in siminds){
+# outpath <- paste0('sims/varmodel/out',outind,'.txt')
+#
+# # run the sim. These files are huge (~500 Mb), so we'll just
+# # save the seeds used to run these
+# out <-  sir_simu(
+#    paramValues = as.list(theta),
+#    initialStates = initialStates,
+#    tau = .0001,
+#    times = time,
+#    method = "mixed",
+#    verbose = TRUE,
+#    nTrials = 100
+#    )
+# #Save the seed:
+# writeLines(as.character(out$seed), paste0('sims/varmodel/',seldir,'/seed',outind,'.txt'))
+#
+# # Simulate trees for different variant frequencies from 10% -- 50%.
+# source('varmodel_bigsim_gettrees.R')
+#
+# # close loop, run another trajectory
+#}
+#
+#

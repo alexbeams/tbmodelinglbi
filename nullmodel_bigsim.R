@@ -105,44 +105,48 @@ getsimtree <- function(tms,output,pH){
 # How many simulations do we want? 
 numouts <- 30
 
+############################################################
+# Uncomment the following section to re-run new simulations:
+############################################################
 
-# produce the trajectory from which to obtain a tree - 
-#	where should we save it?
-
-for(outind in 1:numouts){
- outpath <- paste0('sims/nullmodel/out',outind,'.txt')
-
- # run the sim. These files are huge (~500 Mb), so we'll just
- # save the seeds used to run these
- out <-  sir_simu(
-    paramValues = as.list(theta),
-    initialStates = initialStates,
-    tau = .0001,
-    times = time,
-    method = "mixed",
-    verbose = TRUE,
-    nTrials = 100
-    )
- #Save the seed:
- writeLines(as.character(out$seed), paste0('sims/nullmodel/seed',outind,'.txt'))
-
- # Simulate trees for different combinations of ntests and Nyr.
-
- # How many tests, and how long to test?
- ntestsvec <- c(500,2000)
- Nyrvec <- c(5,10,15,20)
-
-
- # Simulate a tree for each combo of ntests and Nyr:
- for(ntests in ntestsvec){
-  for(Nyr in Nyrvec){
-   # Where should we save our simulated tree?
-   treepath <- paste0('sims/nullmodel/',ntests,'/',Nyr,'yr/tree',outind,'.nwk')
-   # produce a simulated tree:
-   source('nullmodel_bigsim_gettrees.R')
-  }
- }
-
- # close loop, run another trajectory
-}
-
+#
+## produce the trajectory from which to obtain a tree - 
+##	where should we save it?
+#
+#for(outind in 1:numouts){
+# outpath <- paste0('sims/nullmodel/out',outind,'.txt')
+#
+# # run the sim. These files are huge (~500 Mb), so we'll just
+# # save the seeds used to run these
+# out <-  sir_simu(
+#    paramValues = as.list(theta),
+#    initialStates = initialStates,
+#    tau = .0001,
+#    times = time,
+#    method = "mixed",
+#    verbose = TRUE,
+#    nTrials = 100
+#    )
+# #Save the seed:
+# writeLines(as.character(out$seed), paste0('sims/nullmodel/seed',outind,'.txt'))
+#
+# # Simulate trees for different combinations of ntests and Nyr.
+#
+# # How many tests, and how long to test?
+# ntestsvec <- c(500,2000)
+# Nyrvec <- c(5,10,15,20)
+#
+#
+# # Simulate a tree for each combo of ntests and Nyr:
+# for(ntests in ntestsvec){
+#  for(Nyr in Nyrvec){
+#   # Where should we save our simulated tree?
+#   treepath <- paste0('sims/nullmodel/',ntests,'/',Nyr,'yr/tree',outind,'.nwk')
+#   # produce a simulated tree:
+#   source('nullmodel_bigsim_gettrees.R')
+#  }
+# }
+#
+# # close loop, run another trajectory
+#}
+#

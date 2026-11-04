@@ -12,7 +12,7 @@ library(gridExtra)
 library(lme4)
 
 # load the lbi function
-source('lbi.R')
+source('../lbi.R')
 
 # read in the tree:
 tree <- ape::read.tree('BactDatingLin4_relaxed_fixed_anonymized.tree')
@@ -144,18 +144,18 @@ unionnms <- union(names(aovvars.signif),names(kruskvars.signif))
 # reorder these manually
 unionnms <- c('Drug','x11sex','smoke','sympbreath','phone','bed','fridge','carmotobike')
 
-pdf(file='malawi_lbi_figure1.pdf',height=3,width=8)
+pdf(file='../figures/Fig5.pdf',height=3,width=8)
 par(mfrow=c(1,3))
 plotvar('Drug','Drug resistance')
 plotvar('x11sex','Biological sex')
 plotvar('x20hiv','HIV infection') #14 in the 'Unknown' category; difference isn't statistically significant
 dev.off()
 
-pdf(file='malawi_lbi_figure_sympbreath.pdf',height=4,width=4)
+pdf(file='../figures/FigS10pdf',height=4,width=4)
 plotvar('sympbreath','Reported difficulty breathing')
 dev.off()
 
-pdf(file='malawi_lbi_figure_socio.pdf',height=6,width=6)
+pdf(file='../figures/FigS11.pdf',height=6,width=6)
 par(mfrow=c(2,2))
 plotvar('phone','Has a phone')
 plotvar('bed','Has a bed')
@@ -164,38 +164,8 @@ plotvar('fridge','Has a refrigerator')
 #for(nm in c('phone','bed','carmotobike','fridge')){plotvar(nm)}
 dev.off()
 
-pdf(file='malawi_lbi_figure_smoke.pdf',height=4,width=6)
+pdf(file='../figures/FigS12.pdf',height=4,width=6)
 par(mfrow=c(1,1))
 plotvar('smoke','Smoking history')
 dev.off()
 
-pdf(file='malawi_lbi_figure_combined.pdf', height=9, width=10)
-
-# 12-column layout
-# Row 1: 3 panels of width 4 each
-# Row 2: 4 panels of width 3 each
-# Row 3: smoking wider (e.g. cols 2-11, width 10 of 12)
-
-layout(matrix(c(
-   1, 1, 1, 1,  2, 2, 2, 2,  3, 3, 3, 3,   # Row 1: 3 equal panels
-   4, 4, 4,  5, 5, 5,  6, 6, 6,  7, 7, 7,  # Row 2: 4 equal panels
-   0, 0, 0, 8, 8, 8, 8, 8, 8, 0, 0, 0      # Row 3: smoking, centered & wider
-), nrow=3, byrow=TRUE))
-
-par(mar=c(4, 4, 3, 1))
-
-# Group 1
-plotvar('Drug',        'Drug resistance')
-plotvar('x11sex',      'Biological sex')
-plotvar('sympbreath',  'Reported difficulty breathing')
-
-# Group 2
-plotvar('phone',       'Has a phone')
-plotvar('bed',         'Has a bed')
-plotvar('carmotobike', 'Has a car/motorcycle')
-plotvar('fridge',      'Has a refrigerator')
-
-# Group 3
-plotvar('smoke', 'Smoking history')
-
-dev.off()

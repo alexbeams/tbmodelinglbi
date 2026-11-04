@@ -4,14 +4,56 @@
 # load the plotting function
 source('getpophetplotter.R')
 
+# load the package to deal with trees
+require(ape)
+
+# load the lbi function
+source('lbi.R')
 
 
 # Let's try maximizing F statistics of lbi~state at tips (but not nodes), ditto but with nodes,
 #	and also just try maximizing variance in LBI at the tips
  
-require(ape)
+gettauopt <- function(tree){
 
-source('lbi.R')
+	ntests <- Ntip(tree)
+
+	# want to add in rows for nodes with times and LBIs
+	crud <- data.frame(label = tree$tip.label)
+
+	# We don't need to select tau based on node values - just tips (but uncomment to change):
+	## the node labels have the times; extract these:
+	#m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
+
+	#crud2 <- data.frame(label = names(m))
+
+	## the node labels are super clunky, but we need to keep them to match with the tree
+	#crud <- rbind(crud,crud2)
+
+	# calculate LBI for the tips and the nodes for several values of bandwidth, tau:
+	taulbis <- seq(1,100,length=100)
+
+	# just use LBI at tips:
+	for(taulbi in taulbis){crud[,paste0('lbi',taulbi)] <- lbi(tree, tau=taulbi)[1:ntests]}
+
+	# add in a column for the state of the node/tip:
+	crud$state <- NA
+	crud[grep('IH1',crud$label[1:ntests]),'state'] <- 'Group 1'
+	crud[grep('IL1',crud$label[1:ntests]),'state'] <- 'Group 1'
+	crud[grep('IH2',crud$label[1:ntests]),'state'] <- 'Group 2'
+	crud[grep('IL2',crud$label[1:ntests]),'state'] <- 'Group 2'
+
+
+#	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], 
+#		function(z) substr(z, regexpr("S+",z)[1]+3, regexpr(".[+]=",z)[1]+0))
+#
+#	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
+
+	# Calculate F statistics from analysis of variance for each tau:
+	Fstats <- apply(crud[,paste0('lbi',taulbis)], 2, function(x) summary(aov(x~state,crud))[[1]][['F value']][1])
+	tauopt <- taulbis[Fstats==max(Fstats)]
+	return(tauopt)
+}
 
 # Calculate prediction metrics (true positives, false positives, etc.) at the lbi bandwidth
 # that maximizes the F-statistic in aov(lbi~state,lbidat) at various percentiles of lbi 
@@ -97,14 +139,16 @@ getmets <- function(tree){
 }
 
 
+##############################################################
 ## Commenting out the following portion, which calculates
-## false positives, true positives, etc. from the trees 
-## but which is now saved - so we load the rocdat's below
-## to construct the plots
-#
+##  false positives, true positives, etc. from the trees 
+##  but which is now saved - so we load the rocdat's below
+##  to construct the plots
+## Need to uncomment this section if you re-run simulations and want to
+##  calculate ROC for lbi and host type
+##############################################################
+
 ## What are the paths for all of the trees we want to load?
-#
-#
 #
 ######## Case 1, theta1: groups in population equal, homogeneous mixing:
 ########
@@ -363,9 +407,7 @@ getmets <- function(tree){
 #
 
 
-
-
-
+# Now, we load the data for ROC's that was saved in the lines just above.
 # We load the rocdat dataframes to create our plots:
 
 load('sims/pophetmodel/roc/rocdat_case1_theta1.Rdata')
@@ -384,212 +426,68 @@ load("sims/pophetmodel/roc/rocdat_contact_case2_theta2.Rdata")
 
 
 
-## We need to calculate AUC from each rocdat by quadrature:
-#
-#getauc <- function(x,y){
-#	# given gridpoints at x, y, calculate area under the curve y=y(x)
-#	# by averaging the left and right-endpoint quadratures:
-#	left <- sum(diff(c(0,x,1))*c(0,y))
-#	right <- sum(diff(c(0,x,1))*c(y,1))
-#	auc <- mean(c(left,right))
-#	return(auc)
-#}
-#
-#auc_case1_theta1 <- with(as.data.frame(rocdat_case1_theta1), getauc(rev(falsepos),rev(truepos)) )
-#auc_case1_theta2 <- with(as.data.frame(rocdat_case1_theta2), getauc(rev(falsepos),rev(truepos)) )
-#auc_case2_theta1 <- with(as.data.frame(rocdat_case2_theta1), getauc(rev(falsepos),rev(truepos)) )
-#auc_case2_theta2 <- with(as.data.frame(rocdat_case2_theta2), getauc(rev(falsepos),rev(truepos)) )
-#auc_case2_theta3 <- with(as.data.frame(rocdat_case2_theta3), getauc(rev(falsepos),rev(truepos)) )
-#
-#auc_infectiousness_case2_theta1 <- with(as.data.frame(rocdat_infectiousness_case2_theta1), getauc(rev(falsepos),rev(truepos)) )
-#auc_infectiousness_case2_theta2 <- with(as.data.frame(rocdat_infectiousness_case2_theta2), getauc(rev(falsepos),rev(truepos)) )
-#
-#auc_susceptibility_case2_theta1 <- with(as.data.frame(rocdat_susceptibility_case2_theta1), getauc(rev(falsepos),rev(truepos)) )
-#auc_susceptibility_case2_theta2 <- with(as.data.frame(rocdat_susceptibility_case2_theta2), getauc(rev(falsepos),rev(truepos)) )
-#
-#auc_contact_case2_theta1 <- with(as.data.frame(rocdat_contact_case2_theta1), getauc(rev(falsepos),rev(truepos)) )
-#auc_contact_case2_theta2 <- with(as.data.frame(rocdat_contact_case2_theta2), getauc(rev(falsepos),rev(truepos)) )
-#
-#
-#
-## Save plot:
-#pdf(file='figures/roc/Fig6_roc.pdf',height=7,width=14)
-#par(mfrow=c(1,2))
-#plot(truepos~falsepos,rocdat_case1_theta1,type='l',lwd=2,
-#	xlab='False-positive rate',
-#	ylab='True-positive rate',
-#	main='Using LBI to identify risk groups: Case 1',
-#	cex.axis=1.5,cex.lab=1.5,cex.main=1.5)
-#lines(truepos~falsepos,rocdat_case1_theta2,lwd=2,lty=2)
-#legend('bottomright',
-#	legend=c(bquote('Homogeneous mixing, AUC'==.(round(auc_case1_theta1,2))),
-#		bquote('Preferential mixing, AUC'==.(round(auc_case1_theta2,2)))
-#		),
-#	lty=c(1,2),lwd=2,bty='n',cex=1.5,
-#	title='Contact structure')
-#abline(a=0,b=1,lwd=1)
-#
-#plot(truepos~falsepos,rocdat_case2_theta1,type='l',lwd=2,
-#	xlab='False-positive rate',
-#	ylab='True-positive rate',
-#	main='Using LBI to identify risk groups: Case 2',
-#	cex.axis=1.5,cex.lab=1.5,cex.main=1.5)
-#lines(truepos~falsepos,rocdat_case2_theta2,lwd=2,lty=2)
-#legend('bottomright',
-#	legend=c(
-#		bquote('Homogeneous mixing, AUC'==.(round(auc_case2_theta1,2))),
-#		bquote('Preferential mixing, AUC'==.(round(auc_case2_theta2,2)))
-#		),
-#	lty=c(1,2),lwd=2,bty='n',cex=1.5,
-#	title='Contact structure')
-#abline(a=0,b=1,lwd=1)
-#
-## Turn of plotting:
-#dev.off()
-#	
-#
-## Somewhat surprising that case 2 theta 2 does so poorly - why is that?	
-#
-## use treenms for case2, theta2:
-#treelist <- list()
-#for(treenm in treenms){treelist[[treenm]] <- read.tree(treenm)}
-#
-#
-gettauopt <- function(tree){
+# We need to calculate AUC from each rocdat by quadrature:
 
-	ntests <- Ntip(tree)
-
-	# want to add in rows for nodes with times and LBIs
-	crud <- data.frame(label = tree$tip.label)
-
-	# We don't need to select tau based on node values - just tips (but uncomment to change):
-	## the node labels have the times; extract these:
-	#m<- sapply(tree$node.label, function(z) substr(z, regexpr('=',z)[1]+1, regexpr(',re',z)[1]-1 ) ) 
-
-	#crud2 <- data.frame(label = names(m))
-
-	## the node labels are super clunky, but we need to keep them to match with the tree
-	#crud <- rbind(crud,crud2)
-
-	# calculate LBI for the tips and the nodes for several values of bandwidth, tau:
-	taulbis <- seq(1,100,length=100)
-
-	# just use LBI at tips:
-	for(taulbi in taulbis){crud[,paste0('lbi',taulbi)] <- lbi(tree, tau=taulbi)[1:ntests]}
-
-	# add in a column for the state of the node/tip:
-	crud$state <- NA
-	crud[grep('IH1',crud$label[1:ntests]),'state'] <- 'Group 1'
-	crud[grep('IL1',crud$label[1:ntests]),'state'] <- 'Group 1'
-	crud[grep('IH2',crud$label[1:ntests]),'state'] <- 'Group 2'
-	crud[grep('IL2',crud$label[1:ntests]),'state'] <- 'Group 2'
-
-
-#	nodenms <- sapply(crud[(ntests+1):(ntests+tree$Nnode),'label'], 
-#		function(z) substr(z, regexpr("S+",z)[1]+3, regexpr(".[+]=",z)[1]+0))
-#
-#	crud[(Ntip(tree)+1):(tree$Nnode + Ntip(tree)),'state'] <- nodenms
-
-	# Calculate F statistics from analysis of variance for each tau:
-	Fstats <- apply(crud[,paste0('lbi',taulbis)], 2, function(x) summary(aov(x~state,crud))[[1]][['F value']][1])
-	tauopt <- taulbis[Fstats==max(Fstats)]
-	return(tauopt)
+getauc <- function(x,y){
+	# given gridpoints at x, y, calculate area under the curve y=y(x)
+	# by averaging the left and right-endpoint quadratures:
+	left <- sum(diff(c(0,x,1))*c(0,y))
+	right <- sum(diff(c(0,x,1))*c(y,1))
+	auc <- mean(c(left,right))
+	return(auc)
 }
 
-#tauopts <- sapply(treelist, gettauopt)
-#
-## set k
-## getmainplot(treelist[[k]],tauopts[[k]])
-#
-## k=3 is a good example of Group 1 looking higher than Group 2 ( taulbi = 79 )
-## k=29 is a good example of when Group 2 has higher LBi than Group 1  (taulbi = 36)
-#source('getpophetplotter.R')
-#
-#p1 <- getmainplot(treelist[[3]], taulbi=79, title='Example: negative correlation\nbeween LBI and host susceptibility')[[1]] 
-#p2 <- getmainplot(treelist[[29]], taulbi=36, title='Example: positive correlation\nbetween LBI and host susceptibility')[[1]]
-#
-#require(cowplot)
-#
-#plot_example <- plot_grid(p1,p2,nrow=1)
-#ggsave(plot_example, file='figures/pophetmodelfigs/case2example.png',height=10,width=16)
-#
-#
-#
-#
-###
-# Choose some representative trees from the other simulations to make Figure 6:
-###
-#
-## Inefficient, but calculate the optimal taus for each tree...
-#
-## Pick a good example from case 1, theta1:
-#treedir <- 'sims/pophetmodel/case1/theta1/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-#treelist <- list()
-#
-#for(treenm in treenms){
-#	treelist[[treenm]] <- read.tree(treenm)
-#}
-#
-#treelist_case1_theta1 <- treelist
-#
-##tauopts_case1_theta1 <- sapply(treelist, gettauopt)
-#
-## Pick a good example from case 1, theta2:
-#treedir <- 'sims/pophetmodel/case1/theta2/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-#treelist <- list()
-#
-#for(treenm in treenms){
-#	treelist[[treenm]] <- read.tree(treenm)
-#}
-#
-#treelist_case1_theta2 <- treelist
-#
-#tauopts_case1_theta2 <- sapply(treelist, gettauopt)
-#
-#
-## Pick a good example from case 2, theta1:
-#treedir <- 'sims/pophetmodel/case2/theta1/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-#treelist <- list()
-#
-#for(treenm in treenms){
-#	treelist[[treenm]] <- read.tree(treenm)
-#}
-#
-#treelist_case2_theta1 <- treelist
-#
-#tauopts_case2_theta1 <- sapply(treelist, gettauopt)
-#
-## Pick a good example from case 2, theta2:
-#treedir <- 'sims/pophetmodel/case2/theta2/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-#treelist <- list()
-#
-#for(treenm in treenms){
-#	treelist[[treenm]] <- read.tree(treenm)
-#}
-#
-#treelist_case2_theta2 <- treelist
-#
-#tauopts_case2_theta2 <- sapply(treelist, gettauopt)
+auc_case1_theta1 <- with(as.data.frame(rocdat_case1_theta1), getauc(rev(falsepos),rev(truepos)) )
+auc_case1_theta2 <- with(as.data.frame(rocdat_case1_theta2), getauc(rev(falsepos),rev(truepos)) )
+auc_case2_theta1 <- with(as.data.frame(rocdat_case2_theta1), getauc(rev(falsepos),rev(truepos)) )
+auc_case2_theta2 <- with(as.data.frame(rocdat_case2_theta2), getauc(rev(falsepos),rev(truepos)) )
+auc_case2_theta3 <- with(as.data.frame(rocdat_case2_theta3), getauc(rev(falsepos),rev(truepos)) )
 
-# Choose some representatives:
-#tree_case1_theta1 <- treelist_case1_theta1[[1]]
-#tree_case1_theta2 <- treelist_case1_theta2[[1]]
-#tree_case2_theta1 <- treelist_case2_theta1[[1]]
-#tree_case2_theta2 <- treelist_case2_theta2[[1]]
+auc_infectiousness_case2_theta1 <- with(as.data.frame(rocdat_infectiousness_case2_theta1), getauc(rev(falsepos),rev(truepos)) )
+auc_infectiousness_case2_theta2 <- with(as.data.frame(rocdat_infectiousness_case2_theta2), getauc(rev(falsepos),rev(truepos)) )
 
-source('getpophetplotter.R')
+auc_susceptibility_case2_theta1 <- with(as.data.frame(rocdat_susceptibility_case2_theta1), getauc(rev(falsepos),rev(truepos)) )
+auc_susceptibility_case2_theta2 <- with(as.data.frame(rocdat_susceptibility_case2_theta2), getauc(rev(falsepos),rev(truepos)) )
+
+auc_contact_case2_theta1 <- with(as.data.frame(rocdat_contact_case2_theta1), getauc(rev(falsepos),rev(truepos)) )
+auc_contact_case2_theta2 <- with(as.data.frame(rocdat_contact_case2_theta2), getauc(rev(falsepos),rev(truepos)) )
+
+
+
+# Save plot:
+pdf(file='figures/Fig4_roc.pdf',height=7,width=14)
+par(mfrow=c(1,2))
+plot(truepos~falsepos,rocdat_case1_theta1,type='l',lwd=2,
+	xlab='False-positive rate',
+	ylab='True-positive rate',
+	main='Using LBI to identify risk groups: Case 1',
+	cex.axis=1.5,cex.lab=1.5,cex.main=1.5)
+lines(truepos~falsepos,rocdat_case1_theta2,lwd=2,lty=2)
+legend('bottomright',
+	legend=c(bquote('Homogeneous mixing, AUC'==.(round(auc_case1_theta1,2))),
+		bquote('Preferential mixing, AUC'==.(round(auc_case1_theta2,2)))
+		),
+	lty=c(1,2),lwd=2,bty='n',cex=1.5,
+	title='Contact structure')
+abline(a=0,b=1,lwd=1)
+
+plot(truepos~falsepos,rocdat_case2_theta1,type='l',lwd=2,
+	xlab='False-positive rate',
+	ylab='True-positive rate',
+	main='Using LBI to identify risk groups: Case 2',
+	cex.axis=1.5,cex.lab=1.5,cex.main=1.5)
+lines(truepos~falsepos,rocdat_case2_theta2,lwd=2,lty=2)
+legend('bottomright',
+	legend=c(
+		bquote('Homogeneous mixing, AUC'==.(round(auc_case2_theta1,2))),
+		bquote('Preferential mixing, AUC'==.(round(auc_case2_theta2,2)))
+		),
+	lty=c(1,2),lwd=2,bty='n',cex=1.5,
+	title='Contact structure')
+abline(a=0,b=1,lwd=1)
+
+# Turn off plotting:
+dev.off()
 
 tree_case1_theta1 <- read.tree('sims/pophetmodel/case1/theta1/tree1.nwk')
 tree_case1_theta2 <- read.tree('sims/pophetmodel/case1/theta2/tree1.nwk')
@@ -620,8 +518,8 @@ p22 <- getmainplot(tree_case2_theta2, taulbi=tauopt_case2_theta2,
 fig_case1 <- plot_grid(p11,p12,nrow=1)
 fig_case2 <- plot_grid(p21,p22,nrow=1)
 
-ggsave(fig_case1, file='figures/pophetmodelfigs/Fig4_case1.png',height=14,width=18)
-ggsave(fig_case2, file='figures/pophetmodelfigs/Fig4_case2.png',height=14,width=18)
+ggsave(fig_case1, file='figures/Fig4_case1.png',height=14,width=18)
+ggsave(fig_case2, file='figures/Fig4_case2.png',height=14,width=18)
 
 # Show the example in Fig S8 that shows you can have a negative or positive correlation w/LBI in Case 2 theta 2(
 #	(assortative mixing turned on)
@@ -639,40 +537,28 @@ p2 <- getmainplot(treelist[[24]], taulbi=33,
 
 fig_ex <- plot_grid(p1,p2,nrow=1)
 
-ggsave(fig_ex, file='figures/pophetmodelfigs/FigS8.png',height=14,width=18)
+ggsave(fig_ex, file='figures/FigS8.png',height=14,width=18)
 
-### Plot some of the case2, theta3 trees (no superspreading)
-## Pick a good example from case 2, theta2:
-#treedir <- 'sims/pophetmodel/case2/theta3/'
-#treenms <- paste0('tree',1:30,'.nwk')
-#treenms <- paste0(treedir,treenms)
-#
-#treelist <- list()
-#
-#for(treenm in treenms){
-#	treelist[[treenm]] <- read.tree(treenm)
-#}
-#
 
-## Show the ROC plot for Case 2 with elevated infectiousness: 
-#pdf(file='figures/roc/FigS8_roc.pdf',height=7,width=7)
-#par(mfrow=c(1,1))
-#plot(truepos~falsepos,rocdat_infectiousness_case2_theta1,type='l',lwd=2,
-#	xlab='False-positive rate',
-#	ylab='True-positive rate',
-#	main='Using LBI to identify elevated infectiousness: Case 2',
-#	cex.axis=1.5,cex.lab=1.5,cex.main=1.5)
-#lines(truepos~falsepos,rocdat_infectiousness_case2_theta2,lwd=2,lty=2)
-#legend('bottomright',
-#	legend=c(bquote('Homogeneous mixing, AUC'==.(round(auc_infectiousness_case2_theta1,2))),
-#		bquote('Preferential mixing, AUC'==.(round(auc_infectiousness_case2_theta2,2)))
-#		),
-#	lty=c(1,2),lwd=2,bty='n',cex=1.5,
-#	title='Contact structure')
-#abline(a=0,b=1,lwd=1)
-#
-## Turn of plotting:
-#dev.off()
+# Show the ROC plot for Case 2 with elevated infectiousness: 
+pdf(file='figures/FigS9_roc.pdf',height=7,width=7)
+par(mfrow=c(1,1))
+plot(truepos~falsepos,rocdat_infectiousness_case2_theta1,type='l',lwd=2,
+	xlab='False-positive rate',
+	ylab='True-positive rate',
+	main='Using LBI to identify elevated infectiousness: Case 2',
+	cex.axis=1.5,cex.lab=1.5,cex.main=1.5)
+lines(truepos~falsepos,rocdat_infectiousness_case2_theta2,lwd=2,lty=2)
+legend('bottomright',
+	legend=c(bquote('Homogeneous mixing, AUC'==.(round(auc_infectiousness_case2_theta1,2))),
+		bquote('Preferential mixing, AUC'==.(round(auc_infectiousness_case2_theta2,2)))
+		),
+	lty=c(1,2),lwd=2,bty='n',cex=1.5,
+	title='Contact structure')
+abline(a=0,b=1,lwd=1)
+
+# Turn of plotting:
+dev.off()
 
 # Plot some example trees in the infectiousness case:
 tree1 <- read.tree("sims/pophetmodel/infectiousness/case2/theta1/tree1.nwk")
@@ -690,47 +576,7 @@ pinf2 <- getmainplot(tree2, taulbi=tau2,
 
 fig_inf <- plot_grid(pinf1,pinf2,nrow=1)
 
-ggsave(fig_inf, file='figures/pophetmodelfigs/FigS9_trees.png',height=14,width=18)
-
-
-## Show the ROC plot for Case 2 with elevated susceptibility: 
-##pdf(file='figures/roc/pophetmodel_susceptibility_roc.pdf',height=7,width=7)
-#par(mfrow=c(1,1))
-#plot(truepos~falsepos,rocdat_susceptibility_case2_theta1,type='l',lwd=2,
-#	xlab='False-positive rate',
-#	ylab='True-positive rate',
-#	main='Using LBI to identify elevated susceptibility: Case 2',
-#	cex.axis=1.5,cex.lab=1.5,cex.main=1.5)
-#lines(truepos~falsepos,rocdat_susceptibility_case2_theta2,lwd=2,lty=2)
-#legend('bottomright',
-#	legend=c(bquote('Homogeneous mixing, AUC'==.(round(auc_susceptibility_case2_theta1,2))),
-#		bquote('Preferential mixing, AUC'==.(round(auc_susceptibility_case2_theta2,2)))
-#		),
-#	lty=c(1,2),lwd=2,bty='n',cex=1.5,
-#	title='Contact structure')
-#abline(a=0,b=1,lwd=1)
-#
-## Turn of plotting:
-#dev.off()
-
-# Plot some example trees in the susceptibility case -- but these sims aren't in the paper
-# (independently changing susceptibility can mean we have too few of one subgroup in the tree):
-tree1 <- read.tree("sims/pophetmodel/susceptibility/case2/theta1/tree1.nwk")
-tree2 <- read.tree("sims/pophetmodel/susceptibility/case2/theta2/tree2.nwk")
-
-# calculate the optimal taus:
-tau1 <- gettauopt(tree1)
-tau2 <- gettauopt(tree2)
-
-psus1 <- getmainplot(tree1, taulbi=tau1,
-	title='Elevated susceptibility\nCase 2: Homogeneous mixing')[[1]]
-
-psus2 <- getmainplot(tree2, taulbi=tau2,
-	title='Elevated susceptibility\nCase 2: Assortative mixing')[[1]]
-
-fig_sus <- plot_grid(psus1,psus2,nrow=1)
-
-ggsave(fig_sus, file='figures/pophetmodelfigs/fig_sus.png',height=14,width=18)
+ggsave(fig_inf, file='figures/FigS9_trees.png',height=14,width=18)
 
 
 
