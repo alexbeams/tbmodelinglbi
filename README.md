@@ -26,7 +26,7 @@ Fig S3 - run getFigLBIvsTHD.R
 
 Fig 2, Fig S4, Fig S6 - run nullmodel.R and then nullmodelplot.R.
 
-Fig S5 - run nullmodel_bigsim.R (which calls nullmodel_bigsim_gettrees.R) to simulate all of the trees, then run predictionplots_nullmodel.R to produce ROC plots. In prediciton_plots_nullmodel.R, there is a section that runs the simulations which is currently commented out, meaning that figures are reproduced from saved simulations.
+Fig S5 - run nullmodel_bigsim.R (which calls nullmodel_bigsim_gettrees.R) to simulate all of the trees, then run predictionplots_nullmodel.R to produce ROC plots. In nullmodel_bigsim.R and prediciton_plots_nullmodel.R, there are section that run the simulations which are currently commented out, meaning that figures are reproduced from saved simulations.
 
 Fig 3, data for Tables S4 and S5  - run varmodel_bigsim.R (which calls varmodel_bigsim_gettrees.R) to simulate the trees, then run predictionplots_varmodel.R (and in this last file, there is a section that runs simulations which can be commented out to regenerate figures from saved simulations.)
 
