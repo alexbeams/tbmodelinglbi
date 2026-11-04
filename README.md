@@ -18,7 +18,7 @@ install.packages(dplyr)
 
 The most important package in the list is TiPS. It provides a way to specify a compartmental model, simulate it using Gillespie/tau leaping, and then use the realized events to simulate phylogenetic trees of sampled infections using a coalescent approach. You can find a tutorial [here](https://cran.r-project.org/web/packages/TiPS/vignettes/TiPS.html) and read about the method in their paper in [Methods in Ecology and Evolution](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.14038).
 
-Here is how to reproduce the main figures in the manuscript:
+Simulations needed to reproduce figures are included in the sims folder of this repository. There are large sections of code that are currently commented-out to prevent-rerunning simulations, meaning that figures are reproduced from the same simulations that are displayed in our paper. Below, in the instructions to reproduce the main figures in the manuscript, we point to the relevant files where users can un-comment code to rerun new simulations.
 
 Fig 1, Fig S2 - run getFigMalawi.R
 
@@ -26,12 +26,12 @@ Fig S3 - run getFigLBIvsTHD.R
 
 Fig 2, Fig S4, Fig S6 - run nullmodel.R and then nullmodelplot.R.
 
-Fig S5 - run nullmodel_bigsim.R (which calls nullmodel_bigsim_gettrees.R) to simulate all of the trees, then run predictionplots_nullmodel.R to produce ROC plots. In prediciton_plots_nullmodel.R, there is a section that runs the simulations which can be commented out to regenerate figures from saved simulations.
+Fig S5 - run nullmodel_bigsim.R (which calls nullmodel_bigsim_gettrees.R) to simulate all of the trees, then run predictionplots_nullmodel.R to produce ROC plots. In nullmodel_bigsim.R and prediciton_plots_nullmodel.R, there are section that run the simulations which are currently commented out, meaning that figures are reproduced from saved simulations.
 
 Fig 3, data for Tables S4 and S5  - run varmodel_bigsim.R (which calls varmodel_bigsim_gettrees.R) to simulate the trees, then run predictionplots_varmodel.R (and in this last file, there is a section that runs simulations which can be commented out to regenerate figures from saved simulations.)
 
 Fig S7 - run varmodel_phylowave.R
 
-Fig4, FigS8, Fig S9 - run pophetmodel_case1_bigsim.R, pophetmodel_case2_bigsim.R (which call pophetmodel_casex_bigsim_gettrees.R), then run predictionplots_pophetmodel.R to produce each of these figures
+Fig4, FigS8, Fig S9 - run pophetmodel_case1_bigsim.R, pophetmodel_case2_bigsim.R (which call pophetmodel_casex_bigsim_gettrees.R), then run predictionplots_pophetmodel.R to produce each of these figures. In pophetmodel_case1_bigsim.R and popgetmodel_case2_bigsim.R, there are sections of code commented out to prevent re-running simulations, in order to reproduce figures from the previously run simulations used for the manuscript).
 
 Fig 5, S10, S11, S12 - run data_analysis/malawi_lbi.R
